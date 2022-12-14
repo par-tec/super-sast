@@ -1,0 +1,17 @@
+version: '3.9'
+services:
+  dev:
+    build: .
+    volumes:
+    - .:/code
+    entrypoint:
+    - /usr/bin/tail
+    - -f
+    - /dev/null
+  super-linter:
+    image: github/super-linter
+    working_dir: /tmp/lint
+    volumes:
+    - .:/tmp/lint
+    environment:
+    - RUN_LOCAL=true
