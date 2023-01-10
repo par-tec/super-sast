@@ -1,2 +1,5 @@
 *gz
 .*
+*.log
+talisman_report
+.idea

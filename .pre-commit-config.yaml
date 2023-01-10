@@ -62,3 +62,23 @@ repos:
   rev: v1.2.1
   hooks:
     - id: python-safety-dependencies-check
+- repo: local
+  hooks:
+  # -   id: talisman-precommit
+  #     name: talisman
+  #     entry: >-
+  #       bash -c '
+  #        talisman -s'
+  #     language: system
+  #     pass_filenames: false
+  #     types: [text]
+  #     verbose: true
+  - id: trivy-sbom
+    name: trivy-sbom
+    entry: >-
+      bash -c 'trivy -q sbom --artifact-type fs . | jq > bom.json '
+    language: system
+    pass_filenames: false
+    always_run: true
+    verbose: true
+    stages: [manual]
