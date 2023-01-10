@@ -82,3 +82,11 @@ repos:
     always_run: true
     verbose: true
     stages: [manual]
+  - id: dockerfile-security
+    name: dockerfile-security
+    entry: >-
+      conftest test -p .dockerfile-security.rego
+    language: system
+    verbose: true
+    stages: []
+    files: Dockerfile.*
