@@ -9,9 +9,9 @@ FROM openpolicyagent/conftest:v0.36.0 as conftest
 FROM jenkins/jnlp-agent-maven as maven
 RUN mkdir /app/java-validators -p
 COPY pom.xml /app/java-validators
-RUN --mount=type=cache,target=/app/java-validators/.m2 sh -c '(cd /app/java-validators &&  \
-                mvn -Duser.home=/app/java-validators package && \
-                cp -r /app/java-validators/.m2 /root/.m2)'
+RUN --mount=type=cache,target=/root/.m2 sh -c '(cd /app/java-validators &&  \
+                mvn package && \
+                cp -r /root/.m2 /app/java-validators/)'
 
 
 # Base image
@@ -46,7 +46,6 @@ COPY --from=trivy /usr/local/bin/trivy /usr/bin/trivy
 RUN mkdir -p /usr/share
 COPY --from=maven /usr/share/maven /usr/share/maven
 COPY --from=maven /app/java-validators /app/java-validators
-COPY --from=maven /root/.m2 /app/java-validators/.m2
 RUN ln -s  /usr/share/maven/bin/mvn /usr/bin/mvn
 
 # Install conftest.
@@ -55,9 +54,11 @@ COPY --from=conftest /usr/local/bin/conftest /usr/bin/conftest
 # Install python deps.
 RUN pip3 install tox==${TOX_VERSION} \
         pre-commit==${PRE_COMMIT_VERSION} \
-        pytest==${PYTEST_VERSION}
-
-
+        pytest==${PYTEST_VERSION} \
+        semgrep==0.63.0 \
+        bandit==1.7.0 \
+        safety==1.10.3 \
+        checkov==2.0.561
 
 COPY entrypoint.sh /
 

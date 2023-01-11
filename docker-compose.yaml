@@ -4,14 +4,33 @@ services:
     build: .
     volumes:
     - .:/code
+    read_only: false
     entrypoint:
     - /usr/bin/tail
     - -f
     - /dev/null
   super-linter:
     image: github/super-linter
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
     working_dir: /tmp/lint
     volumes:
     - .:/tmp/lint
     environment:
     - RUN_LOCAL=true
+  test:
+    image: ghcr.io/par-tec/super-sast:latest
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+    - .:/code
+    environment:
+    - M2_HOME=/code  # Store maven packages in the shared folder.
+    - USER=nobody
+    working_dir: /code
+    entrypoint:
+    - /usr/bin/tail
+    - -f
+    - /dev/null
