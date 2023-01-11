@@ -5,8 +5,14 @@
 
 # Dependencies
 FROM aquasec/trivy:0.35.0 as trivy
-FROM jenkins/jnlp-agent-maven as maven
 FROM openpolicyagent/conftest:v0.36.0 as conftest
+FROM jenkins/jnlp-agent-maven as maven
+RUN mkdir /app/java-validators -p
+COPY pom.xml /app/java-validators
+RUN --mount=type=cache,target=/app/java-validators/.m2 sh -c '(cd /app/java-validators &&  \
+                mvn -Duser.home=/app/java-validators package && \
+                cp -r /app/java-validators/.m2 /root/.m2)'
+
 
 # Base image
 FROM python:alpine as base_image
@@ -26,16 +32,25 @@ RUN apk add --no-cache \
         git \
         gcompat
 
+# Install talisman.
+RUN wget ${TALISMAN_URL} -O /usr/bin/talisman
+RUN chmod +x /usr/bin/talisman
+
+# Install kubescape.
+RUN wget ${KUBESCAPE_URL} -O /usr/bin/kubescape && chmod +x /usr/bin/kubescape && kubescape download framework
+
 # Install trivy.
 COPY --from=trivy /usr/local/bin/trivy /usr/bin/trivy
 
 # Add maven.
 RUN mkdir -p /usr/share
 COPY --from=maven /usr/share/maven /usr/share/maven
+COPY --from=maven /app/java-validators /app/java-validators
+COPY --from=maven /root/.m2 /app/java-validators/.m2
 RUN ln -s  /usr/share/maven/bin/mvn /usr/bin/mvn
 
+# Install conftest.
 COPY --from=conftest /usr/local/bin/conftest /usr/bin/conftest
-
 
 # Install python deps.
 RUN pip3 install tox==${TOX_VERSION} \
@@ -43,19 +58,17 @@ RUN pip3 install tox==${TOX_VERSION} \
         pytest==${PYTEST_VERSION}
 
 
-RUN mkdir /app/java-validators -p
-COPY pom.xml /app/java-validators
-RUN sh -c '(cd /app/java-validators &&  \
-                mvn  -Duser.home=/app/java-validators package )'
 
-# Install talisman.
-RUN wget ${TALISMAN_URL} -O /usr/bin/talisman
-RUN chmod +x /usr/bin/talisman
-
-# Install kubescape.
-RUN wget ${KUBESCAPE_URL} -O /usr/bin/kubescape && chmod +x /usr/bin/kubescape && kubescape download framework
 COPY entrypoint.sh /
 
+ENV CHECK_SPOTBUGS=true
+ENV CHECK_OWASP_DEPENDENCY_CHECK=true
+ENV CHECK_TRIVY=true
+ENV CHECK_SPOTLESS=true
+ENV CHECK_SPOTLESS_GOAL=check
+ENV CHECK_CONFTEST=true
+ENV CHECK_KUBESCAPE=true
+ENV CHECK_TALISMAN=true
 
 USER 1000
 ENTRYPOINT ["/entrypoint.sh"]
