@@ -40,11 +40,25 @@ DOCKER_BUILDKIT=1 docker build . -t super-sast
 You can enable/disable specific tools setting to false the following
 environment variables.
 
-- CHECK_SPOTBUGS=true
-- CHECK_OWASP_DEPENDENCY_CHECK=true
-- CHECK_TRIVY=true
-- CHECK_SPOTLESS=true
-- CHECK_SPOTLESS_GOAL=check (or apply)
-- CHECK_CONFTEST=true
-- CHECK_KUBESCAPE=true
-- CHECK_TALISMAN=true
+Environment variables:
+
+|Variable|Default|Tool|
+|--------|-------|----|
+|RUN_TRIVY_CONFIG|true|trivy_config|
+|TRIVY_CONFIG_CONFIG_FILE|/app/config/trivy.yaml|trivy_config|
+|RUN_TRIVY_FILESYSTEM|true|trivy_filesystem|
+|TRIVY_FILESYSTEM_CONFIG_FILE|/app/config/trivy.yaml|trivy_filesystem|
+|RUN_BANDIT|true|bandit|
+|BANDIT_CONFIG_FILE|/app/config/bandit.yaml|bandit|
+|RUN_SAFETY|true|safety|
+|SAFETY_CONFIG_FILE|/app/config/safety.yaml|safety|
+|RUN_KUBESCAPE|true|kubescape|
+|KUBESCAPE_ARGS|--cache-dir /tmp|kubescape|
+|RUN_CHECKOV|true|checkov|
+|CHECKOV_CONFIG_FILE|/app/config/.checkov.yaml|checkov|
+|RUN_SEMGREP|true|semgrep|
+|SEMGREP_CONFIG_FILE|auto|semgrep|
+|RUN_SPOTBUGS|true|spotbugs|
+|RUN_OWASP_DEPENDENCY_CHECK|true|owasp_dependency_check|
+|RUN_SPOTLESS_CHECK|true|spotless_check|
+|RUN_SPOTLESS_APPLY|false|spotless_apply|

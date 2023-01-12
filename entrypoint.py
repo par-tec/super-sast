@@ -4,11 +4,9 @@ Run various SAST tools.
 import logging
 import os
 import shlex
-import sys
+from argparse import ArgumentParser
 from pathlib import Path
 from subprocess import run
-
-import pytest
 
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -57,15 +55,17 @@ TOOLS_MAP = {
 }
 
 
-def run_sast(tool, command, env, config_dir):
-    def _localize(path):
-        if not path:
-            return ""
-        if path.startswith("string://"):
-            return path[9:]
-        return (config_dir / path).absolute().as_posix()
+def _localize(path, config_dir):
+    if not path:
+        return ""
+    if path.startswith("string://"):
+        return path[9:]
+    return (config_dir / path).absolute().as_posix()
 
+
+def run_sast(tool, command, env, config_dir):
     log.info(f"Running {tool}")
+
     var_enabled = f"RUN_{tool.upper()}"
     var_args = f"{tool.upper()}_ARGS"
     var_config_file = f"{tool.upper()}_CONFIG_FILE"
@@ -73,23 +73,19 @@ def run_sast(tool, command, env, config_dir):
     env_enabled = env.get(var_enabled, "true")
     env_args = env.get(var_args, "")
     env_config_file = env.get(var_config_file, "")
-    log.info(
-        f"""
-    {var_enabled}={env_enabled}
-    {var_args}={env_args}
-    {var_config_file}={env_config_file}
-    """
-    )
+
+    default_args = command.get("args", "")
+    default_config_file = _localize(command.get("config_file", ""), config_dir)
 
     if env_enabled.lower() != "true":
         log.info(f"Skipping {tool}")
         return
 
     cmdline = command["cmdline"]
-    config_file = env_config_file or _localize(command.get("config_file", ""))
-    args = env_args or command.get("args", "")
+    config_file = env_config_file or default_config_file
+    cmd_args = env_args or default_args
     cmd = cmdline.format(
-        args=args,
+        args=cmd_args,
         config_file=config_file,
     )
     log.warning(f"Running {cmd}")
@@ -103,29 +99,64 @@ def run_sast(tool, command, env, config_dir):
     )
 
 
-if __name__ == "__main__":
-    # open environment variables
-    try:
-        config_dir = Path(sys.argv[1])
-        if not config_dir.is_dir():
-            raise OSError(f"Config directory {config_dir} does not exist")
-    except IndexError:
-        config_dir = Path("/app/config")
-
+def _show_environ(config_dir, dump_config=False):
+    env = os.environ
+    print("Environment variables:")
+    print("""|Variable|Default|Tool|""")
+    print("""|--------|-------|----|""")
     for tool, command in TOOLS_MAP.items():
-        run_sast(tool, command, os.environ, config_dir=config_dir)
+        var_enabled = f"RUN_{tool.upper()}"
+        var_args = f"{tool.upper()}_ARGS"
+        var_config_file = f"{tool.upper()}_CONFIG_FILE"
+
+        env_enabled = env.get(var_enabled, "true")
+        env_args = env.get(var_args, "")
+        env_config_file = env.get(var_config_file, "")
+
+        default_args = command.get("args", "")
+        default_config_file = _localize(
+            command.get("config_file", ""), config_dir=config_dir
+        )
+        if dump_config:
+            print(
+                f"""
+            # {tool}
+            {var_enabled}={env_enabled}
+            {var_args}={env_args or default_args}  # {default_args}
+            {var_config_file}="{env_config_file or default_config_file}"  # {default_config_file}
+            """
+            )
+            continue
+        print(f"""|{var_enabled}|{env_enabled}|{tool}|""")
+        if default_args:
+            print(f"""|{var_args}|{default_args}|{tool}|""")
+        if default_config_file:
+            print(f"""|{var_config_file}|{default_config_file}|{tool}|""")
+    exit(2)
 
 
-# A parameterized test for each TOOLS_MAP entry
-@pytest.mark.parametrize("tool,command", TOOLS_MAP.items())
-def test_tools(tool, command):
-    run_sast(
-        tool=tool,
-        command=command,
-        env={
-            "HOME": "/tmp",
-            "USER": "nobody",
-            "PATH": ("/usr/local/bin:/usr/local/sbin:" "/usr/sbin:/usr/bin:/sbin:/bin"),
-        },
-        config_dir=Path("/code/config"),
+if __name__ == "__main__":
+    parser = ArgumentParser()
+    parser.add_argument(
+        "--config-dir",
+        help="Directory containing config files",
+        default="/app/config",
     )
+    parser.add_argument(
+        "--environs",
+        help="Environment variables to pass to the tools",
+        default="",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--dump-config",
+        help="Environment variables to pass to the tools",
+        default="",
+        action="store_true",
+    )
+    args = parser.parse_args()
+
+    if args.environs or args.dump_config:
+        _show_environ(Path(args.config_dir), dump_config=args.dump_config)
+    for tool, command in TOOLS_MAP.items():
+        run_sast(tool, command, os.environ.copy(), config_dir=Path(args.config_dir))

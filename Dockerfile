@@ -84,4 +84,4 @@ ENV RUN_SPOTLESS_APPLY=false
 
 USER 1000
 HEALTHCHECK NONE
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["python", "/entrypoint.sh"]
