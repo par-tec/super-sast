@@ -1,0 +1,13 @@
+version: '3.9'
+services:
+  super-sast:
+    image: ghcr.io/par-tec/super-sast:latest
+    read_only: false  # Super-sast downloads updated rules in /tmp/.
+    security_opt:
+      - "no-new-privileges:true"
+    volumes:
+    - .:/code
+    environment:
+    - M2_HOME=/code  # Store maven packages in the shared folder.
+    - USER=nobody
+    working_dir: /code
