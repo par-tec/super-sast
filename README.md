@@ -26,6 +26,18 @@ pre-commit install
 
 Pre-commit will generate a CycloneDX SBOM using trivy.
 
+To test the image, run:
+
+```bash
+docker-compose up --build test
+```
+
+To test the remote image (latest), run:
+
+```bash
+docker-compose up --build test-latest
+```
+
 ## Building
 
 To speed up building, use

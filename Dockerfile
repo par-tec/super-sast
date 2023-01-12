@@ -58,10 +58,9 @@ RUN pip3 install tox==${TOX_VERSION} \
         pytest==${PYTEST_VERSION}
 COPY requirements.txt /app/
 RUN pip3 install -r /app/requirements.txt
-VOLUME /.semgrep
 
 COPY config /app/config/
-COPY entrypoint.sh /
+COPY entrypoint.py /
 
 #
 # Default variables.
@@ -84,4 +83,4 @@ ENV RUN_SPOTLESS_APPLY=false
 
 USER 1000
 HEALTHCHECK NONE
-ENTRYPOINT ["python", "/entrypoint.sh"]
+ENTRYPOINT ["python", "/entrypoint.py"]

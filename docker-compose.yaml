@@ -17,7 +17,7 @@ services:
     - .:/tmp/lint
     environment:
     - RUN_LOCAL=true
-  test:
+  test-latest: &test-latest
     image: ghcr.io/par-tec/super-sast:latest
     read_only: false  # Super-sast downloads updated rules in /tmp/.
     security_opt:
@@ -28,3 +28,14 @@ services:
     - M2_HOME=/code  # Store maven packages in the shared folder.
     - USER=nobody
     working_dir: /code
+  test:
+    <<: *test-latest
+    build: .
+    environment:
+      - M2_HOME=/code
+      - HOME=/tmp
+      - USER=nobody
+      - RUN_OWASP_DEPENDENCY_CHECK=false
+      - RUN_SPOTBUGS_CHECK=false
+      - RUN_SPOTLESS_CHECK=false
+      - RUN_SPOTLESS_APPLY=true

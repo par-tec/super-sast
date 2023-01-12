@@ -4,12 +4,22 @@ Run various SAST tools.
 import logging
 import os
 import shlex
+import subprocess
 from argparse import ArgumentParser
 from pathlib import Path
-from subprocess import run
+from sys import stderr, stdout
 
+# Log to stdout
+# for both stdout and stderr.
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(message)s",
+    datefmt="%Y-%m-%dT%H:%M:%S",
+    handlers=[
+        logging.StreamHandler(),
+    ],
+)
 log = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
 
 TOOLS_MAP = {
     "trivy_config": {
@@ -52,6 +62,8 @@ TOOLS_MAP = {
     "spotless_apply": {
         "cmdline": "mvn com.diffplug.spotless:spotless-maven-plugin:apply",
     },
+    #  TODO: conftest
+    #  TODO: talisman
 }
 
 
@@ -63,8 +75,8 @@ def _localize(path, config_dir):
     return (config_dir / path).absolute().as_posix()
 
 
-def run_sast(tool, command, env, config_dir):
-    log.info(f"Running {tool}")
+def run_sast(tool, command, env, config_dir, log_file=stdout):
+    log.info(f"Preparing {tool}")
 
     var_enabled = f"RUN_{tool.upper()}"
     var_args = f"{tool.upper()}_ARGS"
@@ -88,15 +100,20 @@ def run_sast(tool, command, env, config_dir):
         args=cmd_args,
         config_file=config_file,
     )
-    log.warning(f"Running {cmd}")
-    run(
+    log.info(f"Running {cmd}")
+
+    status = subprocess.run(
         shlex.split(cmd),
         shell=False,
-        stdout=Path("stdout.log").open("a"),
-        stderr=Path("stderr.log").open("a"),
-        check=True,
+        stdout=log_file,
+        stderr=log_file,
+        check=False,  # Don't raise exception on non-zero exit code.
+        timeout=600,
         env=env,
     )
+    if status.returncode != 0:
+        log.error(f"{tool} failed with status {status.returncode}")
+    return status.returncode
 
 
 def _show_environ(config_dir, dump_config=False):
@@ -158,5 +175,22 @@ if __name__ == "__main__":
 
     if args.environs or args.dump_config:
         _show_environ(Path(args.config_dir), dump_config=args.dump_config)
+    tee = subprocess.Popen(
+        ["/usr/bin/ tee", "super-sast.log"], shell=False, stdin=subprocess.PIPE
+    )
+    # Cause tee's stdin to get a copy of our stdin/stdout (as well as that
+    # of any child processes we spawn)
+    os.dup2(tee.stdin.fileno(), stdout.fileno())
+    os.dup2(tee.stdin.fileno(), stderr.fileno())
+    sast_status = {}
     for tool, command in TOOLS_MAP.items():
-        run_sast(tool, command, os.environ.copy(), config_dir=Path(args.config_dir))
+        status = run_sast(
+            tool,
+            command,
+            os.environ.copy(),
+            config_dir=Path(args.config_dir),
+            log_file=stdout,
+        )
+        sast_status[tool] = status
+    log.info("All tools finished")
+    log.info(sast_status)
