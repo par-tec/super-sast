@@ -1,67 +1,46 @@
 {
-  "bomFormat": "CycloneDX",
-  "specVersion": "1.4",
-  "serialNumber": "urn:uuid:f8bc221c-f7e4-4246-a4d2-3752b2a25a73",
-  "version": 1,
-  "metadata": {
-    "timestamp": "2023-01-10T12:50:30.510405979Z",
-    "tools": [
-      {
-        "vendor": "aquasecurity",
-        "name": "trivy",
-        "version": "0.28.1"
-      }
-    ],
-    "component": {
-      "bom-ref": "b27f4892-25e9-434e-8250-e236a4cc085d",
-      "type": "application",
-      "name": ".",
-      "properties": [
-        {
-          "name": "aquasecurity:trivy:SchemaVersion",
-          "value": "2"
-        }
-      ]
-    }
-  },
-  "components": [
-    {
-      "bom-ref": "pkg:maven/it.babel.devops/jenkins-super-sast@1.0-SNAPSHOT",
-      "type": "library",
-      "name": "it.babel.devops:jenkins-super-sast",
-      "version": "1.0-SNAPSHOT",
-      "purl": "pkg:maven/it.babel.devops/jenkins-super-sast@1.0-SNAPSHOT",
-      "properties": null
+    "bomFormat": "CycloneDX",
+    "specVersion": "1.4",
+    "serialNumber": "urn:uuid:f8bc221c-f7e4-4246-a4d2-3752b2a25a73",
+    "version": 1,
+    "metadata": {
+        "timestamp": "2023-01-10T12:50:30.510405979Z",
+        "tools": [{"vendor": "aquasecurity", "name": "trivy", "version": "0.28.1"}],
+        "component": {
+            "bom-ref": "b27f4892-25e9-434e-8250-e236a4cc085d",
+            "type": "application",
+            "name": ".",
+            "properties": [{"name": "aquasecurity:trivy:SchemaVersion", "value": "2"}],
+        },
     },
-    {
-      "bom-ref": "fb25f784-4a6c-4c17-b8ad-a3768fdb93cb",
-      "type": "application",
-      "name": "pom.xml",
-      "properties": [
+    "components": [
         {
-          "name": "aquasecurity:trivy:Type",
-          "value": "pom"
+            "bom-ref": "pkg:maven/it.babel.devops/jenkins-super-sast@1.0-SNAPSHOT",
+            "type": "library",
+            "name": "it.babel.devops:jenkins-super-sast",
+            "version": "1.0-SNAPSHOT",
+            "purl": "pkg:maven/it.babel.devops/jenkins-super-sast@1.0-SNAPSHOT",
+            "properties": null,
         },
         {
-          "name": "aquasecurity:trivy:Class",
-          "value": "lang-pkgs"
-        }
-      ]
-    }
-  ],
-  "dependencies": [
-    {
-      "ref": "fb25f784-4a6c-4c17-b8ad-a3768fdb93cb",
-      "dependsOn": [
-        "pkg:maven/it.babel.devops/jenkins-super-sast@1.0-SNAPSHOT"
-      ]
-    },
-    {
-      "ref": "b27f4892-25e9-434e-8250-e236a4cc085d",
-      "dependsOn": [
-        "fb25f784-4a6c-4c17-b8ad-a3768fdb93cb"
-      ]
-    }
-  ],
-  "vulnerabilities": []
+            "bom-ref": "fb25f784-4a6c-4c17-b8ad-a3768fdb93cb",
+            "type": "application",
+            "name": "pom.xml",
+            "properties": [
+                {"name": "aquasecurity:trivy:Type", "value": "pom"},
+                {"name": "aquasecurity:trivy:Class", "value": "lang-pkgs"},
+            ],
+        },
+    ],
+    "dependencies": [
+        {
+            "ref": "fb25f784-4a6c-4c17-b8ad-a3768fdb93cb",
+            "dependsOn": ["pkg:maven/it.babel.devops/jenkins-super-sast@1.0-SNAPSHOT"],
+        },
+        {
+            "ref": "b27f4892-25e9-434e-8250-e236a4cc085d",
+            "dependsOn": ["fb25f784-4a6c-4c17-b8ad-a3768fdb93cb"],
+        },
+    ],
+    "vulnerabilities": [],
 }

@@ -1,0 +1,34 @@
+---
+# Bandit config file.
+# BEWARE: Bandit does not use any configuration file by default
+#         so you need to specify it using -c.
+# If you have lines in your code triggering vulnerability errors
+# and you are certain that this is acceptable, they can be individually
+# silenced by appending # nosec to the line:
+exclude_dirs:
+ - .tox
+ - .git
+ - .mypy_cache
+ - .pytest_cache
+ - .github
+ - venv
+ - tests
+
+
+skips:
+- B404
+- B603
+- B108  # Probable insecure usage of temp file/directory.
+
+# Skip assert inside test files.
+assert_used:
+  skips:
+  - "*/test_*.py"
+
+subprocess_without_shell_equals_true:
+  skips:
+  - "entrypoint.py"
+
+blacklist:
+  skips:
+  - entrypoint.py
