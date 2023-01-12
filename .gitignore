@@ -131,3 +131,4 @@ dmypy.json
 # output
 talisman_report*
 .m2
+.semgrep

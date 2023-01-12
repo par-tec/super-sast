@@ -27,6 +27,7 @@ ARG TALISMAN_URL=https://github.com/thoughtworks/talisman/releases/download/${TA
 ARG KUBESCAPE_VERSION=v2.0.180
 ARG KUBESCAPE_URL=https://github.com/kubescape/kubescape/releases/download/${KUBESCAPE_VERSION}/kubescape-ubuntu-latest
 
+
 RUN apk add --no-cache \
 	openjdk11-jre \
         git \
@@ -54,22 +55,33 @@ COPY --from=conftest /usr/local/bin/conftest /usr/bin/conftest
 # Install python deps.
 RUN pip3 install tox==${TOX_VERSION} \
         pre-commit==${PRE_COMMIT_VERSION} \
-        pytest==${PYTEST_VERSION} \
-        semgrep==0.63.0 \
-        bandit==1.7.0 \
-        safety==1.10.3 \
-        checkov==2.0.561
+        pytest==${PYTEST_VERSION}
+COPY requirements.txt /app/
+RUN pip3 install -r /app/requirements.txt
+VOLUME /.semgrep
 
+COPY config /app/config/
 COPY entrypoint.sh /
 
-ENV CHECK_SPOTBUGS=true
-ENV CHECK_OWASP_DEPENDENCY_CHECK=true
-ENV CHECK_TRIVY=true
-ENV CHECK_SPOTLESS=true
-ENV CHECK_SPOTLESS_GOAL=check
-ENV CHECK_CONFTEST=true
-ENV CHECK_KUBESCAPE=true
-ENV CHECK_TALISMAN=true
+#
+# Default variables.
+#
+# Dowload maven deps to /tmp/.m2/
+ENV M2_HOME=/tmp
+
+# Read-only checks
+ENV RUN_SPOTBUGS=true
+ENV RUN_OWASP_DEPENDENCY_CHECK=true
+ENV RUN_TRIVY_FILESYSTEM=true
+ENV RUN_TRIVY_CONFIG=true
+ENV RUN_SPOTLESS_CHECK=true
+ENV RUN_CONFTEST=true
+ENV RUN_KUBESCAPE=true
+ENV RUN_TALISMAN=true
+
+# Write checks.
+ENV RUN_SPOTLESS_APPLY=false
 
 USER 1000
+HEALTHCHECK NONE
 ENTRYPOINT ["/entrypoint.sh"]

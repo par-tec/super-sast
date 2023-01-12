@@ -1,0 +1,19 @@
+# Trivy config file. Override with
+# TRIVY_CONFIG_CONFIG_FILE=/code/trivy.yaml
+# See https://aquasecurity.github.io/trivy/v0.34/docs/references/customization/config-file/
+
+debug: false
+
+exit-code: 1
+
+# Default is all severities
+severity:
+- HIGH
+- CRITICAL
+
+cache:
+  backend: fs
+  dir: /tmp/.cache/trivy
+
+db:
+  no-progress: true
