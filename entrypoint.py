@@ -176,7 +176,7 @@ if __name__ == "__main__":
     if args.environs or args.dump_config:
         _show_environ(Path(args.config_dir), dump_config=args.dump_config)
     tee = subprocess.Popen(
-        ["/usr/bin/ tee", "super-sast.log"], shell=False, stdin=subprocess.PIPE
+        ["/usr/bin/tee", "super-sast.log"], shell=False, stdin=subprocess.PIPE
     )
     # Cause tee's stdin to get a copy of our stdin/stdout (as well as that
     # of any child processes we spawn)
