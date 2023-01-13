@@ -1,0 +1,54 @@
+#
+# This descriptor allows to run super-sast on devspace
+#   using the commands below.
+#   The current directory is sync'd to the container's /code volume.
+#
+# laptop $ DEVSPACE_CONFIG=devspace-super-sast.yaml devspace dev
+# laptop $ oc rsh deployment.apps/super-sast-devspace
+# container $ python /entrypoint.py
+# ...all super-sast logs...
+# container $ ls -la /code/super-sast.log  # all logs.
+
+version: v2beta1
+name: docker-compose
+
+# This is a list of `deployments` that DevSpace can create for this project
+deployments:
+  super-sast:
+    helm:
+      values:
+        containers:
+          - env:
+              # Cache the maven dependencies locally.
+              - name: M2_HOME
+                value: /code
+              # Set user to a safe value.
+              - name: USER
+                value: nobody
+              # Set HOME to the source directory.
+              - name: HOME
+                value: /code
+            image: ghcr.io/par-tec/super-sast
+            name: super-sast-container
+            workingDir: /code
+            volumeMounts:
+              - containerPath: /code
+                volume:
+                  name: volume-1
+                  readOnly: false
+          # You may want to add another container, e.g. super-linter
+          #   for further analysis.
+        volumes:
+          - emptyDir: {}
+            name: volume-1
+
+# Rename deployment to avoid clashes with existing files.
+devsecops:
+  super-sast:
+    labelSelector:
+      app.kubernetes.io/component: super-sast
+    command: [ "" ]
+    # Sync files between the local filesystem and the development container
+    sync:
+      - path: .:/code
+        startContainer: true

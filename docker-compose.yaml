@@ -39,3 +39,4 @@ services:
       - RUN_SPOTBUGS_CHECK=false
       - RUN_SPOTLESS_CHECK=false
       - RUN_SPOTLESS_APPLY=true
+    entrypoint: ["tox"]
