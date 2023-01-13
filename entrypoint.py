@@ -68,6 +68,26 @@ TOOLS_MAP = {
 }
 
 
+def to_ns(tag, ns):
+    if not ns:
+        return tag
+    return f"{{{ns}}}{tag}"
+
+
+def get_pom_build_plugins(pom_xml):
+    # Parse pom.xml using the standard library
+    from xml.etree import ElementTree
+
+    pom_tree = ElementTree.parse(pom_xml)
+    root = pom_tree.getroot()
+    ns = root.tag.split("}")[0][1:] if root.tag and root.tag.startswith("{") else ""
+    root.tag.replace("{%s}" % ns, "")
+    tag_build = to_ns("build", ns)
+    tag_plugins = to_ns("plugins", ns)
+    plugins = root.find(tag_build).find(tag_plugins)
+    return plugins
+
+
 def _localize(path, config_dir):
     if not path:
         return ""
@@ -76,14 +96,14 @@ def _localize(path, config_dir):
     return (config_dir / path).absolute().as_posix()
 
 
-def run_sast(tool, command, env, config_dir, log_file=stdout):
+def run_sast(tool, command, env, config_dir, log_file=stdout, run_all=True):
     log.info(f"Preparing {tool}")
 
     var_enabled = f"RUN_{tool.upper()}"
     var_args = f"{tool.upper()}_ARGS"
     var_config_file = f"{tool.upper()}_CONFIG_FILE"
 
-    env_enabled = env.get(var_enabled, "true")
+    env_enabled = env.get(var_enabled, "true" if run_all else "false")
     env_args = env.get(var_args, "")
     env_config_file = env.get(var_config_file, "")
 
@@ -195,7 +215,7 @@ if __name__ == "__main__":
     sast_status = {}
 
     _copy_java_validators()
-
+    run_all = os.environ.get("RUN_ALL_TOOLS", "true").lower() == "true"
     for tool, command in TOOLS_MAP.items():
         status = run_sast(
             tool,
@@ -203,6 +223,7 @@ if __name__ == "__main__":
             os.environ.copy(),
             config_dir=Path(args.config_dir),
             log_file=stdout,
+            run_all=run_all,
         )
         sast_status[tool] = status
     log.info("All tools finished")

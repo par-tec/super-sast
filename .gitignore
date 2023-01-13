@@ -134,3 +134,4 @@ talisman_report*
 .semgrep
 .devspace
 *.old
+.vscode
