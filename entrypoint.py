@@ -7,6 +7,7 @@ import shlex
 import subprocess
 from argparse import ArgumentParser
 from pathlib import Path
+from shutil import copytree
 from sys import stderr, stdout
 
 # Log to stdout
@@ -152,6 +153,15 @@ def _show_environ(config_dir, dump_config=False):
     exit(2)
 
 
+def _copy_java_validators():
+    m2_home = Path(os.environ.get("M2_HOME", "/tmp")) / ".m2"
+    if m2_home.exists():
+        log.warning(f"Directory {m2_home} already exists. Skipping copy.")
+        return
+    log.info(f"Copying java validators to {m2_home.absolute().as_posix()}")
+    copytree("/app/java-validators/.m2", m2_home)
+
+
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument(
@@ -183,6 +193,9 @@ if __name__ == "__main__":
     os.dup2(tee.stdin.fileno(), stdout.fileno())
     os.dup2(tee.stdin.fileno(), stderr.fileno())
     sast_status = {}
+
+    _copy_java_validators()
+
     for tool, command in TOOLS_MAP.items():
         status = run_sast(
             tool,

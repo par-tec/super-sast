@@ -132,3 +132,5 @@ dmypy.json
 talisman_report*
 .m2
 .semgrep
+.devspace
+*.old

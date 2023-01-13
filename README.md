@@ -13,7 +13,13 @@ with different static analysis tools, including:
 
 ## Usage
 
-Use this image as a template in jenkins.
+You can run this image with the following command:
+
+```bash
+docker run -v $PWD:/code -e M2_HOME=/code -e HOME=/code -w /code ghcr.io/par-tec/super-sast:latest
+```
+
+See [docs](docs/README.md) for more information on how to use this image in docker-compose or in [devspace](https://devspace.sh).
 
 
 ## Contributing

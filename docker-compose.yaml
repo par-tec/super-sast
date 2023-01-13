@@ -31,6 +31,7 @@ services:
   test:
     <<: *test-latest
     build: .
+    user: "${UID}"
     environment:
       - M2_HOME=/code
       - HOME=/tmp
@@ -39,3 +40,4 @@ services:
       - RUN_SPOTBUGS_CHECK=false
       - RUN_SPOTLESS_CHECK=false
       - RUN_SPOTLESS_APPLY=true
+    entrypoint: ["tox"]
