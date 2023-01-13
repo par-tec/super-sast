@@ -20,7 +20,7 @@ env:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
     - uses: actions/checkout@v3
     - name: Build
@@ -28,6 +28,10 @@ jobs:
         docker-compose build --pull --force-rm test
     - name: Test
       run: |
+        pwd
+        ls -la
+        id
+        echo UID=$(id -u) >> .env
         docker-compose run --rm test
     - name: Cleanup
       run: |
