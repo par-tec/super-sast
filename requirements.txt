@@ -1,4 +1,8 @@
-semgrep==1.3.0
+# Testing and SAST tools.
 bandit==1.7.4
-safety==2.3.5
 checkov==2.2.258
+pytest==6.2.5
+pre-commit==2.15.0
+safety==2.3.5
+semgrep==1.3.0
+tox==3.24.5

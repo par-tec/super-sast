@@ -1,5 +1,12 @@
 """
 Run various SAST tools.
+
+This script is intended to be run as a Docker entrypoint
+and can be tested with the following command:
+
+        pytest -v
+
+It only uses the standard library and has no dependencies.
 """
 import logging
 import os
