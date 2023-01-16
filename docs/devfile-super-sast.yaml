@@ -1,0 +1,49 @@
+#
+# A [devfile.io](https://devfile.io) file is a YAML file that describes a development environment.
+#
+schemaVersion: 2.1.0
+metadata:
+  name: super-sast
+  namespace: deleteme-sast
+components:
+  - name: m2
+    volume:
+      size: 1G
+  - name: super-sast
+    container:
+      image: ghcr.io/par-tec/super-sast
+      command: [ "tail", "-f", "/dev/null" ]
+      mountSources: true
+      sourceMapping: /projects
+      volumeMounts:
+        - name: m2
+          path: /home/user/
+      endpoints:
+        # A dummy port to keep the container running.
+        - exposure: public
+          name: http
+          protocol: http
+          targetPort: 8081
+      env:
+        - name: M2_HOME
+          value: /home/user
+        - name: HOME
+          value: /home/user
+        - name: USER
+          value: user
+        - name: RUN_ALL_TOOLS  # Disable this flag to run only spotless.
+          value: "true"
+        - name: RUN_SPOTLESS_CHECK
+          value: "true"
+commands:
+  # Execute the entrypoint in the container. Get the output
+  #   in /projects/super-sast.log or via
+  #   $ oc logs deployment.apps/quarkus-sast-app
+  - exec:
+      commandLine: "sh -c 'python /entrypoint.py'"
+      component: super-sast
+      group:
+        isDefault: true
+        kind: run
+      workingDir: /projects
+    id: 1-super-sast

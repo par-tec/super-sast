@@ -1,0 +1,64 @@
+# A devfile.io file is a YAML file that describes a development environment.
+# It is used by devspace to create a development environment.
+# This is a devfile for super-sast.
+schemaVersion: 2.2.0
+metadata:
+  name: super-sast
+  version: 0.0.1
+  description: >-
+    Super SAST is an OCI image containing a collection of
+    static analysis tools.
+  language: Python
+  provider: Par-Tec SpA
+  tags:
+  - SAST
+  - Security
+  supportUrl: https://github.com/ghcr.io/par-tec/super-sast
+components:
+  - # Build the image with `odo build-images`
+    # Note: OCP builder does not support buildkit yet, so this may
+    #       not work.
+    name: image-build
+    image:
+      imageName: super-sast:latest
+      dockerfile:
+        uri: Dockerfile
+        buildContext: .
+        rootRequired: false
+  - name: m2
+    volume: {}
+  - name: tools
+    container:
+      image: ghcr.io/par-tec/super-sast
+      command: [ "tail", "-f", "/dev/null" ]
+      mountSources: true
+      sourceMapping: /projects
+      volumeMounts:
+        - name: m2
+          path: /user/home/
+      endpoints:
+        - exposure: public
+          name: http
+          protocol: http
+          targetPort: 8080
+      env:
+        - name: M2_HOME
+          value: /user/home
+        - name: HOME
+          value: /user/home
+        - name: USER
+          value: nobody
+        - name: BANDIT_CONFIG_FILE  # Use project's .bandit.yaml
+          value: .bandit.yaml
+
+commands:
+  - id: build
+    apply:
+      component: image-build
+  - id: run  # Execute this command into `tools` container.
+    exec:
+      # commandLine: "sh -c 'pwd; id; ls -la /* -ld'"
+      commandLine: "sh -c 'cd /projects; python /entrypoint.py'"
+      component: tools
+      group:
+        kind: run

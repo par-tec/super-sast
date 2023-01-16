@@ -136,3 +136,5 @@ talisman_report*
 *.old
 .vscode
 .pom*
+
+.odo
