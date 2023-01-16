@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from entrypoint import TOOLS_MAP, get_pom_build_plugins, run_sast
+from entrypoint import POM, TOOLS_MAP, run_sast
 
 
 # A parameterized test for each TOOLS_MAP entry
@@ -20,11 +20,27 @@ def test_tools(tool, command):
     )
 
 
-def test_parse_pom():
+def test_pom_parse():
     pom_xml = Path(__file__).parent / "src-pom.xml"
-    dest_xml = Path(__file__).parent / "dest-pom.xml"
-    src_plugins = get_pom_build_plugins(pom_xml)
-    assert src_plugins is not None
-    dest_plugins = get_pom_build_plugins(dest_xml)
-    assert dest_plugins is not None
-    raise NotImplementedError
+    dst_xml = Path(__file__).parent / "dest-pom.xml"
+    src_pom = POM(pom_xml)
+    dst_pom = POM(dst_xml)
+    assert src_pom.ns
+    assert dst_pom.ns
+
+
+def test_pom_get_plugins():
+    pom_xml = Path(__file__).parent / "src-pom.xml"
+    pom = POM(pom_xml)
+    plugins = pom.findall(".//build/plugins/plugin")
+    assert len(plugins) == 3
+
+
+def test_pom_append_plugins():
+    pom_xml = Path(__file__).parent / "src-pom.xml"
+    dst_xml = Path(__file__).parent / "dest-pom.xml"
+    dst_pom = POM(dst_xml)
+    dst_pom.add_plugins_from_pom(pom_xml.absolute().as_posix())
+    dst_plugins = dst_pom.plugins()
+    assert len(dst_plugins) == 6
+    dst_pom.write("tests/deleteme-out.xml")

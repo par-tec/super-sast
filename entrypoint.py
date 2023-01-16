@@ -3,12 +3,14 @@ Run various SAST tools.
 """
 import logging
 import os
+import re
 import shlex
 import subprocess
 from argparse import ArgumentParser
 from pathlib import Path
 from shutil import copytree
 from sys import stderr, stdout
+from xml.etree import ElementTree
 
 # Log to stdout
 # for both stdout and stderr.
@@ -68,24 +70,61 @@ TOOLS_MAP = {
 }
 
 
-def to_ns(tag, ns):
-    if not ns:
-        return tag
-    return f"{{{ns}}}{tag}"
+class POM:
+    def __init__(self, pom_xml):
+        self.pom_xml = pom_xml
+        self.pom_tree = ElementTree.parse(pom_xml)
+        self.root = self.pom_tree.getroot()
+        self.ns = (
+            self.root.tag.split("}")[0][1:]
+            if self.root.tag and self.root.tag.startswith("{")
+            else ""
+        )
 
+        self.TAG_BUILD = self.to_ns("build")
+        self.TAG_PLUGINS = self.to_ns("plugins")
 
-def get_pom_build_plugins(pom_xml):
-    # Parse pom.xml using the standard library
-    from xml.etree import ElementTree
+    def to_ns(self, tag):
+        if not self.ns:
+            return tag
+        return f"{{{self.ns}}}{tag}"
 
-    pom_tree = ElementTree.parse(pom_xml)
-    root = pom_tree.getroot()
-    ns = root.tag.split("}")[0][1:] if root.tag and root.tag.startswith("{") else ""
-    root.tag.replace("{%s}" % ns, "")
-    tag_build = to_ns("build", ns)
-    tag_plugins = to_ns("plugins", ns)
-    plugins = root.find(tag_build).find(tag_plugins)
-    return plugins
+    def find(self, tag, parent=None):
+        parent = parent or self.root
+        return parent.find(self.to_ns(tag))
+
+    def findall(self, xpath, parent=None):
+        parent = parent or self.root
+        xpath = re.sub(r"(\w+)", rf"{{{self.ns}}}\1", xpath) if self.ns else xpath
+        return parent.findall(xpath)
+
+    def plugins(self):
+        return self.findall(".//build/plugins/plugin")
+
+    def plugins_tag(self):
+        return self.find(".//build/plugins")
+
+    def add_plugins(self, plugins):
+        if not plugins:
+            return
+        build = self.find("build")
+        # Add build tag if it doesn't exist.
+        if not build:
+            build = ElementTree.SubElement(self.root, self.TAG_BUILD)
+        plugins_tag = self.find(build, "plugins")
+        # Add plugins tag if it doesn't exist.
+        if not plugins_tag:
+            plugins_tag = ElementTree.SubElement(build, self.TAG_PLUGINS)
+        for plugins in plugins:
+            plugins_tag.append(plugins)
+
+    def add_plugins_from_pom(self, src_pom_xml: str):
+        src_pom = POM(src_pom_xml)
+        src_plugins = src_pom.plugins()
+        self.add_plugins(src_plugins)
+
+    def write(self, fpath: str):
+        self.pom_tree.write(fpath, encoding="utf-8", xml_declaration=True)
 
 
 def _localize(path, config_dir):
