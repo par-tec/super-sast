@@ -60,6 +60,14 @@ environment variables.
 
 Environment variables:
 
+- General variables
+
+|Variable|Default|Tool|
+|--------|-------|----|
+|RUN_ALL_TOOLS|true|Run all available tools. Set it to false to selectively enable single tools.|
+
+- Tools variables
+
 |Variable|Default|Tool|
 |--------|-------|----|
 |RUN_TRIVY_CONFIG|true|trivy_config|

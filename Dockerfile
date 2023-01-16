@@ -19,9 +19,6 @@ FROM python:alpine as base_image
 
 
 # Config vars
-ARG TOX_VERSION=3.23.1
-ARG PYTEST_VERSION=6.2.5
-ARG PRE_COMMIT_VERSION=2.15.0
 ARG TALISMAN_VERSION=v1.29.4
 ARG TALISMAN_URL=https://github.com/thoughtworks/talisman/releases/download/${TALISMAN_VERSION}/talisman_linux_386
 ARG KUBESCAPE_VERSION=v2.0.180
@@ -53,9 +50,6 @@ RUN ln -s  /usr/share/maven/bin/mvn /usr/bin/mvn
 COPY --from=conftest /usr/local/bin/conftest /usr/bin/conftest
 
 # Install python deps.
-RUN pip3 install tox==${TOX_VERSION} \
-        pre-commit==${PRE_COMMIT_VERSION} \
-        pytest==${PYTEST_VERSION}
 COPY requirements.txt /app/
 RUN pip3 install -r /app/requirements.txt
 
@@ -69,14 +63,8 @@ COPY entrypoint.py /
 ENV M2_HOME=/tmp
 
 # Read-only checks
-ENV RUN_SPOTBUGS=true
-ENV RUN_OWASP_DEPENDENCY_CHECK=true
-ENV RUN_TRIVY_FILESYSTEM=true
-ENV RUN_TRIVY_CONFIG=true
-ENV RUN_SPOTLESS_CHECK=true
-ENV RUN_CONFTEST=true
-ENV RUN_KUBESCAPE=true
-ENV RUN_TALISMAN=true
+ENV RUN_ALL_TOOLS=true
+
 
 # Write checks.
 ENV RUN_SPOTLESS_APPLY=false

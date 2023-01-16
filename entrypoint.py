@@ -1,14 +1,24 @@
 """
 Run various SAST tools.
+
+This script is intended to be run as a Docker entrypoint
+and can be tested with the following command:
+
+        pytest -v
+
+It only uses the standard library and has no dependencies.
 """
 import logging
 import os
+import re
 import shlex
 import subprocess
+import uuid
 from argparse import ArgumentParser
 from pathlib import Path
 from shutil import copytree
 from sys import stderr, stdout
+from xml.etree import ElementTree
 
 # Log to stdout
 # for both stdout and stderr.
@@ -68,6 +78,125 @@ TOOLS_MAP = {
 }
 
 
+class POM:
+    def __init__(self, pom_xml):
+        self.pom_xml = pom_xml
+        self.pom_tree = ElementTree.parse(pom_xml)
+        self.root = self.pom_tree.getroot()
+        self.ns = (
+            self.root.tag.split("}")[0][1:]
+            if self.root.tag and self.root.tag.startswith("{")
+            else ""
+        )
+
+        self.TAG_BUILD = self.to_ns("build")
+        self.TAG_PLUGINS = self.to_ns("plugins")
+
+    @staticmethod
+    def plugin_id(plugin):
+        ns = plugin.tag.split("}")[0][1:] if plugin.tag.startswith("{") else ""
+
+        def _find_or_none(field, ns):
+            tag = plugin.find(POM._to_ns(field, ns))
+            if tag:
+                return tag.text
+            return None
+
+        return tuple(
+            _find_or_none(field, ns)
+            for field in (
+                "groupId",
+                "artifactId",
+                "version",
+            )
+        )
+
+    @staticmethod
+    def _to_ns(tag, ns):
+        return f"{{{ns}}}{tag}" if ns else tag
+
+    def to_ns(self, tag):
+        return POM._to_ns(tag, self.ns)
+
+    def find(self, tag, parent=None):
+        parent = parent or self.root
+        return parent.find(self.to_ns(tag))
+
+    def findall(self, xpath, parent=None):
+        parent = parent or self.root
+        xpath = re.sub(r"(\w+)", rf"{{{self.ns}}}\1", xpath) if self.ns else xpath
+        return parent.findall(xpath)
+
+    def plugins(self):
+        return self.findall(".//build/plugins/plugin")
+
+    def plugins_tag(self):
+        return self.findall(".//build/plugins")[0]
+
+    def add_plugins(self, plugins):
+        if not plugins:
+            return
+        build = self.find("build")
+        # Add build tag if it doesn't exist.
+        if not build:
+            build = ElementTree.SubElement(self.root, self.TAG_BUILD)
+        plugins_tag = self.find("plugins", build)
+        # Add plugins tag if it doesn't exist.
+        if not plugins_tag:
+            plugins_tag = ElementTree.SubElement(build, self.TAG_PLUGINS)
+
+        dst_plugins = {(g, a): v for g, a, v in map(POM.plugin_id, self.plugins())}
+        for plugins in plugins:
+            # Apply the destination pom namespace to the plugin.
+            POM.replace_ns(plugins, self.ns)
+
+            *target_plugin, target_version = POM.plugin_id(plugins)
+            # Ensure that the plugin doesn't already exist.
+            existing_version = dst_plugins.get(tuple(target_plugin))
+            if not existing_version:
+                log.info(f"Adding plugin {POM.plugin_id(plugins)}")
+                plugins_tag.append(plugins)
+                continue
+            if existing_version == target_version:
+                log.info(f"Plugin {POM.plugin_id(plugins)} already exists. Skipping.")
+                continue
+            if existing_version != target_version:
+                raise ValueError(
+                    f"Plugin {target_plugin} already exists with version {existing_version}"
+                )
+
+    def validate_plugins(self, plugins):
+        dst_plugins = {(g, a): v for g, a, v in map(POM.plugin_id, self.plugins())}
+        src_plugins = {(g, a): v for g, a, v in map(POM.plugin_id, plugins)}
+        for plugin_id, version in src_plugins.items():
+            if plugin_id in dst_plugins and dst_plugins[plugin_id] != version:
+                raise ValueError(
+                    f"Plugin {plugin_id} already exists with version {dst_plugins[plugin_id]}"
+                )
+
+    @staticmethod
+    def replace_ns(element, new_ns):
+        if element.tag.startswith("{"):
+            if new_ns:
+                element.tag = f"{{{new_ns}}}{element.tag.split('}')[1]}"
+            else:
+                element.tag = element.tag.split("}")[1]
+        elif new_ns:
+            element.tag = f"{{{new_ns}}}{element.tag}"
+
+        for child in element:
+            POM.replace_ns(child, new_ns)
+
+    def add_plugins_from_pom(self, src_pom_xml: str):
+        src_pom = POM(src_pom_xml)
+        src_plugins = src_pom.plugins()
+        self.add_plugins(src_plugins)
+
+    def write(self, fpath: str):
+        ElementTree.register_namespace("", self.ns)
+        self.pom_tree.write(fpath, encoding="utf-8", xml_declaration=True)
+
+
 def _localize(path, config_dir):
     if not path:
         return ""
@@ -76,14 +205,14 @@ def _localize(path, config_dir):
     return (config_dir / path).absolute().as_posix()
 
 
-def run_sast(tool, command, env, config_dir, log_file=stdout):
+def run_sast(tool, command, env, config_dir, log_file=stdout, run_all=True):
     log.info(f"Preparing {tool}")
 
     var_enabled = f"RUN_{tool.upper()}"
     var_args = f"{tool.upper()}_ARGS"
     var_config_file = f"{tool.upper()}_CONFIG_FILE"
 
-    env_enabled = env.get(var_enabled, "true")
+    env_enabled = env.get(var_enabled, "true" if run_all else "false")
     env_args = env.get(var_args, "")
     env_config_file = env.get(var_config_file, "")
 
@@ -103,6 +232,13 @@ def run_sast(tool, command, env, config_dir, log_file=stdout):
     )
     log.info(f"Running {cmd}")
 
+    if cmd.startswith("mvn "):
+        dst_pom = POM("pom.xml")
+        tmpfile = f".pom.xml.{uuid.uuid4()}"
+        log.info("Creating runtime pom.xml in %r", (tmpfile,))
+        dst_pom.add_plugins_from_pom("/app/java-validators/pom.xml")
+        dst_pom.write(tmpfile)
+        cmd = f"mvn -f {tmpfile} {cmd[3:]}"
     status = subprocess.run(
         shlex.split(cmd),
         shell=False,
@@ -122,6 +258,7 @@ def _show_environ(config_dir, dump_config=False):
     print("Environment variables:")
     print("""|Variable|Default|Tool|""")
     print("""|--------|-------|----|""")
+    print("""|RUN_ALL_TOOLS|true|Run all tools|""")
     for tool, command in TOOLS_MAP.items():
         var_enabled = f"RUN_{tool.upper()}"
         var_args = f"{tool.upper()}_ARGS"
@@ -195,7 +332,7 @@ if __name__ == "__main__":
     sast_status = {}
 
     _copy_java_validators()
-
+    run_all = os.environ.get("RUN_ALL_TOOLS", "true").lower() == "true"
     for tool, command in TOOLS_MAP.items():
         status = run_sast(
             tool,
@@ -203,6 +340,7 @@ if __name__ == "__main__":
             os.environ.copy(),
             config_dir=Path(args.config_dir),
             log_file=stdout,
+            run_all=run_all,
         )
         sast_status[tool] = status
     log.info("All tools finished")

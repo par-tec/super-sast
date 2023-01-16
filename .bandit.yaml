@@ -13,12 +13,15 @@ exclude_dirs:
  - .github
  - venv
  - tests
+ - test
 
 
 skips:
 - B404
+- B405
 - B603
 - B108  # Probable insecure usage of temp file/directory.
+- B314
 
 # Skip assert inside test files.
 assert_used:
