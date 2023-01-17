@@ -52,6 +52,17 @@ To speed up building, use
 DOCKER_BUILDKIT=1 docker build . -t super-sast
 ```
 
+You can build a ppc64le image on a linux host using
+the  [multiarch/qemu-user-static](https://github.com/multiarch/qemu-user-static) image.
+Beware that this image executes as root a script
+that registers below kind of /proc/sys/fs/binfmt_misc/qemu-$arch files for all supported processors except the current one in it when running the container (e.g. see `ls -la /proc/sys/fs/binfmt_misc/qemu-*` on your host).
+For further information, see the original repo.
+
+```bash
+docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+```
+
+**Note**: ppc64le does not support all the tools.
 
 ## Running
 

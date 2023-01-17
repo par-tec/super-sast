@@ -2,17 +2,16 @@
 # An all-in-one Dockerfile for running Super-Linter and other
 # static analysis tools.
 #
-
 # Dependencies
-FROM aquasec/trivy:0.35.0 as trivy
 FROM openpolicyagent/conftest:v0.36.0 as conftest
-FROM jenkins/jnlp-agent-maven as maven
+FROM aquasec/trivy:0.35.0 as trivy
+FROM maven as maven
 RUN mkdir /app/java-validators -p
 COPY pom.xml /app/java-validators
-RUN --mount=type=cache,target=/root/.m2 sh -c '(cd /app/java-validators &&  \
+# --mount=type=cache,target=/root/.m2
+RUN sh -c '(cd /app/java-validators &&  \
                 mvn package && \
                 cp -r /root/.m2 /app/java-validators/)'
-
 
 # Base image
 FROM python:alpine as base_image
@@ -24,18 +23,17 @@ ARG TALISMAN_URL=https://github.com/thoughtworks/talisman/releases/download/${TA
 ARG KUBESCAPE_VERSION=v2.0.180
 ARG KUBESCAPE_URL=https://github.com/kubescape/kubescape/releases/download/${KUBESCAPE_VERSION}/kubescape-ubuntu-latest
 
-
 RUN apk add --no-cache \
 	openjdk11-jre \
         git \
         gcompat
 
-# Install talisman.
-RUN wget ${TALISMAN_URL} -O /usr/bin/talisman
-RUN chmod +x /usr/bin/talisman
+COPY ./scripts /app/scripts
 
+# Install talisman.
+RUN . /app/scripts/install_talisman.sh && install_talisman
 # Install kubescape.
-RUN wget ${KUBESCAPE_URL} -O /usr/bin/kubescape && chmod +x /usr/bin/kubescape && kubescape download framework
+RUN . /app/scripts/install_kubescape.sh && install_kubescape
 
 # Install trivy.
 COPY --from=trivy /usr/local/bin/trivy /usr/bin/trivy
