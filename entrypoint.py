@@ -63,6 +63,7 @@ TOOLS_MAP = {
     },
     "spotbugs": {
         "cmdline": "mvn com.github.spotbugs:spotbugs-maven-plugin:check",
+        "config_file": "",
     },
     "owasp_dependency_check": {
         "cmdline": "mvn org.owasp:dependency-check-maven:check",

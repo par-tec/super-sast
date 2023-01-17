@@ -7,16 +7,19 @@ FROM openpolicyagent/conftest:v0.36.0 as conftest
 FROM aquasec/trivy:0.35.0 as trivy
 
 # Java builder
-FROM maven as maven
+FROM maven:3.6.3-openjdk-11 as maven
 RUN mkdir /app/java-validators -p
 COPY pom.xml /app/java-validators
-#
-RUN --mount=type=cache,target=/root/.m2 sh -c '(cd /app/java-validators &&  \
-                mvn package && \
-                cp -r /root/.m2 /app/java-validators/)'
+RUN --mount=type=cache,target=/root/.m2 sh -c '( \
+        cd /app/java-validators &&  \
+        mvn dependency:copy-dependencies  dependency:resolve-plugins && \
+        cp -r /root/.m2 /app/java-validators/)'
+
+# Pin a python version.
+FROM python:3.11.1-alpine as base_python
 
 # Python builder.
-FROM python:alpine as build
+FROM base_python as build
 RUN  apk add --no-cache \
 	openjdk11-jre \
 	git \
@@ -31,7 +34,7 @@ COPY requirements.txt /
 RUN --mount=type=cache,target=/root/.cache pip3 install -r /requirements.txt
 
 # Base image
-FROM python:alpine as base_image
+FROM base_python as base_image
 
 
 # Config vars
@@ -48,9 +51,9 @@ RUN apk add --no-cache \
 COPY ./scripts /app/scripts
 
 # Install talisman.
-RUN . /app/scripts/install_talisman.sh && install_talisman
+# RUN . /app/scripts/install_talisman.sh && install_talisman
 # Install kubescape.
-RUN . /app/scripts/install_kubescape.sh && install_kubescape
+# RUN . /app/scripts/install_kubescape.sh && install_kubescape
 
 # Install trivy.
 COPY --from=trivy /usr/local/bin/trivy /usr/bin/trivy

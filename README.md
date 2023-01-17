@@ -96,6 +96,7 @@ Environment variables:
 |RUN_SEMGREP|true|semgrep|
 |SEMGREP_CONFIG_FILE|auto|semgrep|
 |RUN_SPOTBUGS|true|spotbugs|
+|SPOTBUGS_CONFIG_FILE||spotbugs. Set this to a file in the current repository, e.g. /code/spotbugs-exclude.xml|
 |RUN_OWASP_DEPENDENCY_CHECK|true|owasp_dependency_check|
 |RUN_SPOTLESS_CHECK|true|spotless_check|
 |RUN_SPOTLESS_APPLY|false|spotless_apply|

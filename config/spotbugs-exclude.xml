@@ -1,0 +1,7 @@
+<!--
+    This file is used to exclude SpotBugs warnings from the build.
+    It is used by the spotbugs-maven-plugin.
+    See https://spotbugs.readthedocs.io/en/stable/filter.html for more information.
+-->
+<FindBugsFilter>
+</FindBugsFilter>

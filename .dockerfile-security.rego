@@ -86,7 +86,7 @@ deny[msg] {
 
 exception[rules] {
   input[i].Cmd == "from"
-  input[i].Value[0] == "maven"
+  input[i].Value[0] == "maven:3.6.3-openjdk-11"
 
   rules := ["untrusted_base_image"]
 }
