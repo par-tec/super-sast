@@ -86,7 +86,7 @@ deny[msg] {
 
 exception[rules] {
   input[i].Cmd == "from"
-  input[i].Value[0] == "jenkins/jnlp-agent-maven"
+  input[i].Value[0] == "maven"
 
   rules := ["untrusted_base_image"]
 }

@@ -5,13 +5,30 @@
 # Dependencies
 FROM openpolicyagent/conftest:v0.36.0 as conftest
 FROM aquasec/trivy:0.35.0 as trivy
+
+# Java builder
 FROM maven as maven
 RUN mkdir /app/java-validators -p
 COPY pom.xml /app/java-validators
-# --mount=type=cache,target=/root/.m2
-RUN sh -c '(cd /app/java-validators &&  \
+#
+RUN --mount=type=cache,target=/root/.m2 sh -c '(cd /app/java-validators &&  \
                 mvn package && \
                 cp -r /root/.m2 /app/java-validators/)'
+
+# Python builder.
+FROM python:alpine as build
+RUN  apk add --no-cache \
+	openjdk11-jre \
+	git \
+	gcompat \
+	build-base \
+	libffi-dev \
+	rust \
+	cargo
+
+RUN pip3 install --upgrade pip
+COPY requirements.txt /
+RUN --mount=type=cache,target=/root/.cache pip3 install -r /requirements.txt
 
 # Base image
 FROM python:alpine as base_image
@@ -47,10 +64,13 @@ RUN ln -s  /usr/share/maven/bin/mvn /usr/bin/mvn
 # Install conftest.
 COPY --from=conftest /usr/local/bin/conftest /usr/bin/conftest
 
-# Install python deps.
+# Copy python dependencies to speed up
+# an expensive pip install.
 COPY requirements.txt /app/
-RUN pip3 install -r /app/requirements.txt
+COPY --from=build /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=build /usr/local/bin /usr/local/bin
 
+# Copy the rest of the code.
 COPY config /app/config/
 COPY entrypoint.py /
 
