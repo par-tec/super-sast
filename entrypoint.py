@@ -46,8 +46,8 @@ TOOLS_MAP = {
         "config_file": "bandit.yaml",
     },
     "safety": {
-        "cmdline": "safety {args} check",
-        "config_file": "safety.yaml",
+        "cmdline": "safety check {args}",
+        "args": "-r requirements.txt",
     },
     "kubescape": {
         "cmdline": "kubescape {args} scan .",

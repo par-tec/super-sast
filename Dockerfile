@@ -38,18 +38,20 @@ FROM base_python as base_image
 
 
 # Config vars
-ARG TALISMAN_VERSION=v1.29.4
-ARG TALISMAN_URL=https://github.com/thoughtworks/talisman/releases/download/${TALISMAN_VERSION}/talisman_linux_386
-ARG KUBESCAPE_VERSION=v2.0.180
-ARG KUBESCAPE_URL=https://github.com/kubescape/kubescape/releases/download/${KUBESCAPE_VERSION}/kubescape-ubuntu-latest
 
 RUN apk add --no-cache \
 	openjdk11-jre \
         git \
         gcompat
 
+#
+# Skip talisman and kubescape for now.
+#
+#ARG TALISMAN_VERSION=v1.29.4
+#ARG TALISMAN_URL=https://github.com/thoughtworks/talisman/releases/download/${TALISMAN_VERSION}/talisman_linux_386
+#ARG KUBESCAPE_VERSION=v2.0.180
+#ARG KUBESCAPE_URL=https://github.com/kubescape/kubescape/releases/download/${KUBESCAPE_VERSION}/kubescape-ubuntu-latest
 COPY ./scripts /app/scripts
-
 # Install talisman.
 # RUN . /app/scripts/install_talisman.sh && install_talisman
 # Install kubescape.
