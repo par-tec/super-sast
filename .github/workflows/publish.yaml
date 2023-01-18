@@ -17,6 +17,8 @@ on:
     paths-ignore:
       - '**/*.md'
       - '**/*.txt'
+      - '!requirements.txt'
+      - '!requirements-dev.txt'
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
