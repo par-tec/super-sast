@@ -6,13 +6,16 @@
 FROM openpolicyagent/conftest:v0.36.0 as conftest
 FROM aquasec/trivy:0.35.0 as trivy
 
-# Java builder
-FROM maven:3.6.3-openjdk-11 as maven
+# Java builder is based on eclipse-temurin-11
+#   which is the only maintained multi-platform maven
+#   image. Other images e.g. [openjdk](https://hub.docker.com/_/openjdk)
+#   are deprecated.
+FROM maven:3.8.7-eclipse-temurin-11 as maven
 RUN mkdir /app/java-validators -p
 COPY pom.xml /app/java-validators
 RUN --mount=type=cache,target=/root/.m2 sh -c '( \
         cd /app/java-validators &&  \
-        mvn dependency:copy-dependencies  dependency:resolve-plugins && \
+        mvn dependency:go-offline && \
         cp -r /root/.m2 /app/java-validators/)'
 
 # Pin a python version.
@@ -20,7 +23,10 @@ FROM python:3.11.1-alpine as base_python
 
 # Python builder.
 FROM base_python as build
-RUN  apk add --no-cache \
+ARG TARGETPLATFORM
+ARG APK_CACHE=/var/cache/apk-${TARGETPLATFORM}
+RUN  --mount=type=cache,target=${APK_CACHE} ln -s ${APK_CACHE} /etc/apk/cache && \
+        apk --cache-dir=${APK_CACHE} add \
 	openjdk11-jre \
 	git \
 	gcompat \
@@ -38,8 +44,10 @@ FROM base_python as base_image
 
 
 # Config vars
-
-RUN apk add --no-cache \
+ARG TARGETPLATFORM
+ARG APK_CACHE=/var/cache/apk-${TARGETPLATFORM}
+RUN  --mount=type=cache,target=${APK_CACHE} \
+        apk --cache-dir=${APK_CACHE} add \
 	openjdk11-jre \
         git \
         gcompat

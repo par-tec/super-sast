@@ -53,13 +53,25 @@ DOCKER_BUILDKIT=1 docker build . -t super-sast
 ```
 
 You can build a ppc64le image on a linux host using
-the  [multiarch/qemu-user-static](https://github.com/multiarch/qemu-user-static) image.
-Beware that this image executes as root a script
+the  [multiarch/qemu-user-static](https://github.com/multiarch/qemu-user-static) image that relies on the [Linux Kernel support for miscellaneous binary formats (binfmt_misc)](https://docs.kernel.org/admin-guide/binfmt-misc.html).
+
+Beware that this image executes as `root` a script
 that registers below kind of /proc/sys/fs/binfmt_misc/qemu-$arch files for all supported processors except the current one in it when running the container (e.g. see `ls -la /proc/sys/fs/binfmt_misc/qemu-*` on your host).
-For further information, see the original repo.
+For further information, see the [multiarch/qemu-user-static] repo.
 
 ```bash
 docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+docker build --platform amd64,ppc64le -t super-sast .
+```
+
+A multiplatform image can be built using the [buildx](https://docs.docker.com/buildx/working-with-buildx/) command.
+
+```bash
+LABEL=$(date +%Y%m%d-%H%M)
+docker buildx build \
+    --platform amd64,ppc64le \
+    -t docker.io/ioggstream/super-sast:$LABEL \
+    --push .
 ```
 
 **Note**: ppc64le does not support all the tools.
