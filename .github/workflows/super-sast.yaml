@@ -1,0 +1,31 @@
+name: SAST
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.txt'
+      - '!requirements.txt'
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.txt'
+      - '!requirements.txt'
+
+permissions: read-all
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+    - uses: actions/checkout@v3
+    - name: Test
+      run: |
+        echo UID=$(id -u) >> .env
+        docker-compose run --rm test-latest
+    - name: Cleanup
+      run: |
+        docker-compose down -v && docker-compose rm --force
