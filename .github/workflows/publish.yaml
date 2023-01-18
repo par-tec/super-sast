@@ -6,12 +6,19 @@ on:
     paths-ignore:
       - '**/*.md'
       - '**/*.txt'
+      # This re-includes the requirements file
+      # while not touching any other previously
+      # excluded .txt files. For more information,
+      # see https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#filter-pattern-cheat-sheet
+      - '!requirements.txt'
+      - '!requirements-dev.txt'
   pull_request:
     branches: [main]
     paths-ignore:
       - '**/*.md'
       - '**/*.txt'
-
+      - '!requirements.txt'
+      - '!requirements-dev.txt'
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
