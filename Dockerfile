@@ -47,15 +47,15 @@ RUN apk add --no-cache \
 #
 # Skip talisman and kubescape for now.
 #
-#ARG TALISMAN_VERSION=v1.29.4
-#ARG TALISMAN_URL=https://github.com/thoughtworks/talisman/releases/download/${TALISMAN_VERSION}/talisman_linux_386
-#ARG KUBESCAPE_VERSION=v2.0.180
-#ARG KUBESCAPE_URL=https://github.com/kubescape/kubescape/releases/download/${KUBESCAPE_VERSION}/kubescape-ubuntu-latest
+ARG TALISMAN_VERSION=v1.29.4
+ARG TALISMAN_URL=https://github.com/thoughtworks/talisman/releases/download/${TALISMAN_VERSION}/talisman_linux_386
+ARG KUBESCAPE_VERSION=v2.0.180
+ARG KUBESCAPE_URL=https://github.com/kubescape/kubescape/releases/download/${KUBESCAPE_VERSION}/kubescape-ubuntu-latest
 COPY ./scripts /app/scripts
 # Install talisman.
-# RUN . /app/scripts/install_talisman.sh && install_talisman
+RUN . /app/scripts/install_talisman.sh && install_talisman
 # Install kubescape.
-# RUN . /app/scripts/install_kubescape.sh && install_kubescape
+RUN . /app/scripts/install_kubescape.sh && install_kubescape
 
 # Install trivy.
 COPY --from=trivy /usr/local/bin/trivy /usr/bin/trivy

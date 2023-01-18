@@ -19,7 +19,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
                     <effort>Max</effort>
                     <threshold>Low</threshold>
                     <failOnError>true</failOnError>
-                    <excludeFilterFile>${spotbugs.excludeFilterFile}</excludeFilterFile>
+                    <excludeFilterFile>${env.SPOTBUGS_CONFIG_FILE}</excludeFilterFile>
                     <plugins>
                         <plugin>
                             <groupId>com.h3xstream.findsecbugs</groupId>
@@ -39,7 +39,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
             <plugin>
                 <groupId>org.owasp</groupId>
                 <artifactId>dependency-check-maven</artifactId>
-                <version>7.4.4</version>
+                <version>8.0.0</version>
                 <configuration>
                     <cveStartYear>2018</cveStartYear>
                 </configuration>

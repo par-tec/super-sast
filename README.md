@@ -76,6 +76,7 @@ Environment variables:
 |Variable|Default|Tool|
 |--------|-------|----|
 |RUN_ALL_TOOLS|true|Run all available tools. Set it to false to selectively enable single tools.|
+|MAVEN_ARGS| |Pass extra arguments to maven3 checks, e.g. `-ntp` to skip logging dependency downloads.|
 
 - Tools variables
 

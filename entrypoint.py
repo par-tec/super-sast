@@ -62,17 +62,16 @@ TOOLS_MAP = {
         "config_file": "string://auto",
     },
     "spotbugs": {
-        "cmdline": "mvn com.github.spotbugs:spotbugs-maven-plugin:check",
-        "config_file": "",
+        "cmdline": "mvn {maven_args} com.github.spotbugs:spotbugs-maven-plugin:check",
     },
     "owasp_dependency_check": {
-        "cmdline": "mvn org.owasp:dependency-check-maven:check",
+        "cmdline": "mvn {maven_args} org.owasp:dependency-check-maven:check",
     },
     "spotless_check": {
-        "cmdline": "mvn com.diffplug.spotless:spotless-maven-plugin:check",
+        "cmdline": "mvn {maven_args} com.diffplug.spotless:spotless-maven-plugin:check",
     },
     "spotless_apply": {
-        "cmdline": "mvn com.diffplug.spotless:spotless-maven-plugin:apply",
+        "cmdline": "mvn {maven_args} com.diffplug.spotless:spotless-maven-plugin:apply",
     },
     #  TODO: conftest
     #  TODO: talisman
@@ -219,7 +218,6 @@ def run_sast(tool, command, env, config_dir, log_file=stdout, run_all=True):
 
     default_args = command.get("args", "")
     default_config_file = _localize(command.get("config_file", ""), config_dir)
-
     if env_enabled.lower() != "true":
         log.info(f"Skipping {tool}")
         return
@@ -230,16 +228,19 @@ def run_sast(tool, command, env, config_dir, log_file=stdout, run_all=True):
     cmd = cmdline.format(
         args=cmd_args,
         config_file=config_file,
+        maven_args=env.get("MAVEN_ARGS", ""),
     )
-    log.info(f"Running {cmd}")
 
     if cmd.startswith("mvn "):
+        # TODO skip missing pom.xml
         dst_pom = POM("pom.xml")
         tmpfile = f".pom.xml.{uuid.uuid4()}"
         log.info("Creating runtime pom.xml in %r", (tmpfile,))
         dst_pom.add_plugins_from_pom("/app/java-validators/pom.xml")
         dst_pom.write(tmpfile)
         cmd = f"mvn -f {tmpfile} {cmd[3:]}"
+
+    log.info(f"Running {cmd}")
     status = subprocess.run(
         shlex.split(cmd),
         shell=False,
