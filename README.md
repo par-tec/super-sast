@@ -64,7 +64,13 @@ docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
 docker build --platform amd64,ppc64le -t super-sast .
 ```
 
-A multiplatform image can be built using the [buildx](https://docs.docker.com/buildx/working-with-buildx/) command.
+Before building the multiplatform image, it's necessary to create, select and then start the [buildx](https://docs.docker.com/buildx/working-with-buildx/) context with the following command
+
+```bash
+docker buildx create --name mybuild --use --bootstrap
+```
+
+A multiplatform image can then be built with
 
 ```bash
 LABEL=$(date +%Y%m%d-%H%M)
@@ -75,6 +81,11 @@ docker buildx build \
 ```
 
 **Note**: ppc64le does not support all the tools.
+
+**Note 2**: If you're building the image locally for testing or development purposes, the `--push` option (but _not_ the dot!)
+should be omitted in order to avoid publishing the image to the
+registry.
+
 
 ## Running
 
