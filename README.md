@@ -52,6 +52,29 @@ To speed up building, use
 DOCKER_BUILDKIT=1 docker build . -t super-sast
 ```
 
+You can build a ppc64le image on a linux host using
+the  [multiarch/qemu-user-static](https://github.com/multiarch/qemu-user-static) image that relies on the [Linux Kernel support for miscellaneous binary formats (binfmt_misc)](https://docs.kernel.org/admin-guide/binfmt-misc.html).
+
+Beware that this image executes as `root` a script
+that registers below kind of /proc/sys/fs/binfmt_misc/qemu-$arch files for all supported processors except the current one in it when running the container (e.g. see `ls -la /proc/sys/fs/binfmt_misc/qemu-*` on your host).
+For further information, see the [multiarch/qemu-user-static] repo.
+
+```bash
+docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+docker build --platform amd64,ppc64le -t super-sast .
+```
+
+A multiplatform image can be built using the [buildx](https://docs.docker.com/buildx/working-with-buildx/) command.
+
+```bash
+LABEL=$(date +%Y%m%d-%H%M)
+docker buildx build \
+    --platform amd64,ppc64le \
+    -t docker.io/ioggstream/super-sast:$LABEL \
+    --push .
+```
+
+**Note**: ppc64le does not support all the tools.
 
 ## Running
 
@@ -65,6 +88,7 @@ Environment variables:
 |Variable|Default|Tool|
 |--------|-------|----|
 |RUN_ALL_TOOLS|true|Run all available tools. Set it to false to selectively enable single tools.|
+|MAVEN_ARGS| |Pass extra arguments to maven3 checks, e.g. `-ntp` to skip logging dependency downloads.|
 
 - Tools variables
 
@@ -85,6 +109,7 @@ Environment variables:
 |RUN_SEMGREP|true|semgrep|
 |SEMGREP_CONFIG_FILE|auto|semgrep|
 |RUN_SPOTBUGS|true|spotbugs|
+|SPOTBUGS_CONFIG_FILE||spotbugs. Set this to a file in the current repository, e.g. /code/spotbugs-exclude.xml|
 |RUN_OWASP_DEPENDENCY_CHECK|true|owasp_dependency_check|
 |RUN_SPOTLESS_CHECK|true|spotless_check|
 |RUN_SPOTLESS_APPLY|false|spotless_apply|

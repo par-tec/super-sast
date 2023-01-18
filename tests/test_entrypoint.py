@@ -16,6 +16,7 @@ def test_tools(tool, command):
         env={
             "HOME": "/tmp",
             "USER": "nobody",
+            "BANDIT_CONFIG_FILE": "/code/config/bandit.yaml",
             "PATH": ("/usr/local/bin:/usr/local/sbin:" "/usr/sbin:/usr/bin:/sbin:/bin"),
         },
         config_dir=Path("/code/config"),

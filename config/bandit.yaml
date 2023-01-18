@@ -1,1 +1,11 @@
-{}
+# BEWARE: Bandit does not use any configuration file by default
+#         so you need to specify it using -c.
+# If you have lines in your code triggering vulnerability errors
+# and you are certain that this is acceptable, they can be individually
+# silenced by appending # nosec to the line.
+
+# Bandit does not ignore any directory by default, so you need to
+# specify some directories to ignore.
+exclude_dirs:
+  - .tox
+  - .git
