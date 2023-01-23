@@ -1,0 +1,151 @@
+schemaVersion: 2.1.0
+metadata:
+  name: quarkus-quickstart
+  namespace: ioggstream-devspaces
+attributes:
+  controller.devfile.io/devworkspace-config:
+    name: devworkspace-config
+    namespace: openshift-devspaces
+  controller.devfile.io/storage-type: per-user
+projects:
+  - name: quarkus-quickstarts
+    zip:
+      location: 'http://devfile-registry.openshift-devspaces.svc:8080/resources/v2/quarkus-quickstarts.zip'
+components:
+  - attributes:
+      che-code.eclipse.org/contribute-cpuLimit: true
+      che-code.eclipse.org/contribute-cpuRequest: true
+      che-code.eclipse.org/contribute-endpoint/che-code: 3100
+      che-code.eclipse.org/contribute-endpoint/code-redirect-1: 13131
+      che-code.eclipse.org/contribute-endpoint/code-redirect-2: 13132
+      che-code.eclipse.org/contribute-endpoint/code-redirect-3: 13133
+      che-code.eclipse.org/contribute-entry-point: true
+      che-code.eclipse.org/contribute-memoryLimit: true
+      che-code.eclipse.org/contribute-memoryRequest: true
+      che-code.eclipse.org/contribute-volume-mount/checode: /checode
+      che-code.eclipse.org/contributed-container: tools
+      che-code.eclipse.org/original-memoryLimit: 4G
+    container:
+      command:
+        - /checode/entrypoint-volume.sh
+      cpuLimit: 500m
+      cpuRequest: 30m
+      endpoints:
+        - exposure: none
+          name: debug
+          protocol: tcp
+          targetPort: 5005
+        - exposure: public
+          name: hello-greeting-endpoint
+          path: /hello/greeting/devspaces-user
+          protocol: http
+          targetPort: 8080
+        - attributes:
+            contributed-by: che-code.eclipse.org
+            cookiesAuthEnabled: true
+            discoverable: false
+            type: main
+            urlRewriteSupported: true
+          exposure: public
+          name: che-code
+          path: '?tkn=eclipse-che'
+          protocol: https
+          secure: false
+          targetPort: 3100
+        - attributes:
+            contributed-by: che-code.eclipse.org
+            discoverable: false
+            urlRewriteSupported: true
+          exposure: public
+          name: code-redirect-1
+          protocol: http
+          targetPort: 13131
+        - attributes:
+            contributed-by: che-code.eclipse.org
+            discoverable: false
+            urlRewriteSupported: true
+          exposure: public
+          name: code-redirect-2
+          protocol: http
+          targetPort: 13132
+        - attributes:
+            contributed-by: che-code.eclipse.org
+            discoverable: false
+            urlRewriteSupported: true
+          exposure: public
+          name: code-redirect-3
+          protocol: http
+          targetPort: 13133
+      env:
+        - name: QUARKUS_HTTP_HOST
+          value: 0.0.0.0
+        - name: CHE_DASHBOARD_URL
+          value: 'https://devspaces.apps.ocp.cluster.example'
+        - name: CHE_PLUGIN_REGISTRY_URL
+          value: 'https://devspaces.apps.ocp.cluster.example/plugin-registry/v3'
+        - name: CHE_PLUGIN_REGISTRY_INTERNAL_URL
+          value: 'http://plugin-registry.openshift-devspaces.svc:8080/v3'
+        - name: OPENVSX_REGISTRY_URL
+          value: 'https://open-vsx.org'
+      image: 'registry.redhat.io/devspaces/udi-rhel8@sha256:ac5aaba0bbf1caa7f23205ab837e3029ff9f605211ebf38bdf4b9f1b8fb1ba83'
+      memoryLimit: 5.07G
+      memoryRequest: 256Mi
+      mountSources: true
+      sourceMapping: /projects
+      volumeMounts:
+        - name: m2
+          path: /home/user/.m2
+        - name: checode
+          path: /checode
+    name: tools
+  - name: m2
+    volume:
+      size: 1G
+  - container:
+      command:
+        - tail
+        - '-f'
+        - /dev/null
+      env:
+        - name: M2_HOME
+          value: /home/user
+        - name: HOME
+          value: /home/user
+        - name: USER
+          value: user
+        - name: RUN_ALL_TOOLS
+          value: 'true'
+      image: 'ghcr.io/par-tec/super-sast:latest'
+      mountSources: true
+      sourceMapping: /projects
+      volumeMounts:
+        - name: m2
+          path: /home/user/.m2
+    name: super-sast
+commands:
+  - exec:
+      # Same workingDir as the other commands.
+      commandLine: sh -c 'python /entrypoint.py'
+      component: super-sast
+      group:
+        isDefault: false
+        kind: run
+      workingDir: '${PROJECTS_ROOT}/quarkus-quickstarts/getting-started'
+    id: 2-super-sast
+  - exec:
+      commandLine: mvn package
+      component: tools
+      group:
+        isDefault: true
+        kind: build
+      workingDir: '${PROJECTS_ROOT}/quarkus-quickstarts/getting-started'
+    id: 1-package
+  - exec:
+      commandLine: 'mvn compile quarkus:dev'
+      component: tools
+      group:
+        isDefault: true
+        kind: run
+      label: Start Development mode (Hot reload + debug)
+      workingDir: '${PROJECTS_ROOT}/quarkus-quickstarts/getting-started'
+    id: 2-startdev
