@@ -92,6 +92,11 @@ commands:
 
 ![workspace configuration file](img/Dev Spaces-1.png)
 
+See the following example Dev Spaces workspace devfiles:
+
+- [python](devspaces-workfile-super-sast-python.yaml)
+- [quarkus](devspaces-workfile-super-sast-quarkus.yaml)
+
 Once you save and redeploy your workspace, you can run super-sast:
 
 - [via command line](#run-command-line) using the embedded `oc` command;
@@ -104,10 +109,13 @@ or via command line (see below).
 ### Running super-sast via command line {#run-command-line}
 
 Since the workspace contains the `oc` command, you can access the super-sast container
-in the workspace pod.
+in the workspace pod referencing the correct workspace name using
+the specific label (e.g. `quarkus-quickstart` in the example below).
 
 ```bash
-$ SAST=$(oc get deployment.apps -o name)
+# Show the workspace pods
+$ oc get deployment.apps --show-labels
+$ SAST=$(oc get deployment.apps -o name -l controller.devfile.io/devworkspace_name=quarkus-quickstart)
 $ oc rsh -c super-sast $SAST
 / $  # this is the super-sast shell.
 ```
@@ -130,7 +138,6 @@ specific tests, or even access the super-sast log file.
 
 ![run super sast task ](img/Dev Spaces-2-run-task.png)
 
-
 ## Troubleshooting super-sast in Dev Spaces
 
 You can troubleshoot issues using the `oc` command and/or running super-sast via command line in the vscode terminal.
@@ -139,16 +146,23 @@ If the sast container doesn't show up, check the openshift deployment status, or
 
 ```bash
 $ oc get all
+...
+$ oc get deployment.apps --show-labels
+
+NAME                        READY   UP-TO-DATE   AVAILABLE   AGE    LABELS
+workspace66ae6d95bfe64a26   1/1     1            1           50m    controller.devfile.io/devworkspace_name=quarkus-quickstart
+
+
 $ oc get events --watch
+... logs ...
 ```
 
 If the `workspace` application is running, ensure that it provides all the containers deployed by the workspace devfile.
 Then open a shell into the super-sast container.
 
-
 ```bash
 # Access the sast container
-$ SAST=$(oc get deployment.apps -o name)
+$ SAST=$(oc get deployment.apps -o name -l controller.devfile.io/devworkspace_name=quarkus-quickstart)
 $ oc rsh -c super-sast $SAST
 
 # run super-sast from the project's directory.
