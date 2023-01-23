@@ -90,7 +90,7 @@ commands:
         isDefault: true
 ```
 
-![workspace configuration file](img/Dev Spaces-1.png)
+![workspace configuration file](img/devspaces-1.png)
 
 See the following example Dev Spaces workspace devfiles:
 
@@ -104,7 +104,7 @@ Once you save and redeploy your workspace, you can run super-sast:
 
 The `super-sast.log` is accessible in the project directory tree
 or via command line (see below).
-![super-sast.log](img/Dev Spaces-3.png)
+![super-sast.log](img/devspaces-3.png)
 
 ### Running super-sast via command line {#run-command-line}
 
@@ -136,7 +136,7 @@ specific tests, or even access the super-sast log file.
 1. click on the "Task Manager" icon (![task icon](https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Font_Awesome_5_solid_tasks.svg/12px-Font_Awesome_5_solid_tasks.svg.png)) on the left;
 2. click on the "Run Task" button (▶️);
 
-![run super sast task ](img/Dev Spaces-2-run-task.png)
+![run super sast task ](img/devspaces-2-run-task.png)
 
 ## Troubleshooting super-sast in Dev Spaces
 
