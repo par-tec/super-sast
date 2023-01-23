@@ -99,12 +99,12 @@ See the following example Dev Spaces workspace devfiles:
 
 Once you save and redeploy your workspace, you can run super-sast:
 
-- [via command line](#run-command-line) using the embedded `oc` command;
-- [via the "Task Manager" vscode extension](#run-task-manager), if your organization explicitly allows you to install it.
+- or [via command line](#run-command-line) using the embedded `oc` command;
+- or [via the "Task Manager" vscode extension](#run-task-manager), if your organization explicitly allows you to install it.
 
-The `super-sast.log` is accessible in the project directory tree
+The `super-sast.log` is always accessible in the project directory tree
 or via command line (see below).
-![super-sast.log](img/devspaces-3.png)
+![super-sast.log](img/devspaces-3-log.png)
 
 ### Running super-sast via command line {#run-command-line}
 
@@ -134,7 +134,9 @@ specific tests, or even access the super-sast log file.
 ### Running with the Task Manager extension  {#run-task-manager}
 
 1. click on the "Task Manager" icon (![task icon](https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Font_Awesome_5_solid_tasks.svg/12px-Font_Awesome_5_solid_tasks.svg.png)) on the left;
-2. click on the "Run Task" button (▶️);
+2. click on the "Run Task" button (▶️) and see the log in the terminal window;
+
+The image below shows a configuration that only runs [bandit](https://bandit.readthedocs.io/en/latest/) (`RUN_BANDIT=true`) and disables all the other tools (`RUN_ALL_TOOLS=false`) to simplify the execution process.
 
 ![run super sast task ](img/devspaces-2-run-task.png)
 
