@@ -6,20 +6,26 @@ metadata:
   name: super-sast
   namespace: deleteme-sast
 components:
+  # If you are running Red Hat Dev Spaces,
+  #   the following blocks should be added to the workspace
+  #   devfile that you see in the UI.
   - name: m2
     volume:
       size: 1G
   - name: super-sast
     container:
       image: ghcr.io/par-tec/super-sast
-      command: [ "tail", "-f", "/dev/null" ]
+      command:
+        - tail
+        - '-f'
+        - /dev/null
       mountSources: true
       sourceMapping: /projects
       volumeMounts:
         - name: m2
           path: /home/user/
+      # Some workspaces need a dummy port to keep the container running.
       endpoints:
-        # A dummy port to keep the container running.
         - exposure: public
           name: http
           protocol: http
@@ -37,8 +43,8 @@ components:
           value: "true"
 commands:
   # Execute the entrypoint in the container. Get the output
-  #   in /projects/super-sast.log or via
-  #   $ oc logs deployment.apps/quarkus-sast-app
+  #   in ${workingDir}/super-sast.log or via
+  #   $ oc logs deployment.apps/super-sast
   - exec:
       commandLine: "sh -c 'python /entrypoint.py'"
       component: super-sast
@@ -46,4 +52,4 @@ commands:
         isDefault: true
         kind: run
       workingDir: /projects
-    id: 1-super-sast
+    id: super-sast

@@ -1,5 +1,5 @@
 #
-# This descriptor allows to run super-sast on devspace
+# This descriptor allows to run super-sast on devspace (not the Red Hat tool!)
 #   using the commands below.
 #   The current directory is sync'd to the container's /code volume.
 #
