@@ -23,6 +23,41 @@ def test_tools(tool, command):
     )
 
 
+def test_mvn_fail():
+    tool = "spotless_check"
+    command = TOOLS_MAP[tool]
+    status = run_sast(
+        tool=tool,
+        command=command,
+        env={
+            "HOME": "/tmp",
+            "USER": "nobody",
+            "MAVEN_ARGS": "-f /foo.xml",
+            "BANDIT_CONFIG_FILE": "/code/config/bandit.yaml",
+            "PATH": ("/usr/local/bin:/usr/local/sbin:" "/usr/sbin:/usr/bin:/sbin:/bin"),
+        },
+        config_dir=Path("/code/config"),
+    )
+    assert status == 2
+
+
+def test_mvn_skip():
+    tool = "spotless_check"
+    command = TOOLS_MAP[tool]
+    status = run_sast(
+        tool=tool,
+        command=command,
+        env={
+            "HOME": "/tmp",
+            "USER": "nobody",
+            "BANDIT_CONFIG_FILE": "/code/config/bandit.yaml",
+            "PATH": ("/usr/local/bin:/usr/local/sbin:" "/usr/sbin:/usr/bin:/sbin:/bin"),
+        },
+        config_dir=Path("/code/config"),
+    )
+    assert status == 0
+
+
 def test_pom_parse():
     pom_xml = DATA_DIR / "src-pom.xml"
     dst_xml = DATA_DIR / "dest-pom.xml"
