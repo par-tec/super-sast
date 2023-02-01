@@ -41,6 +41,7 @@ jobs:
         ls -la
         id
         echo UID=$(id -u) >> .env
+        sed -e '/USER=nobody/d' -i docker-compose.yaml
         docker-compose run --rm test
     - name: Cleanup
       run: |
