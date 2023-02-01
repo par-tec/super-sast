@@ -232,7 +232,12 @@ def run_sast(tool, command, env, config_dir, log_file=stdout, run_all=True):
     )
 
     if cmd.startswith("mvn "):
-        # TODO skip missing pom.xml
+        if " -f " in cmd:
+            log.error(f"Skipping {tool} because it uses a custom pom.xml: {cmd}")
+            return 2
+        if not Path("pom.xml").is_file():
+            log.info("Skipping maven command because pom.xml is missing")
+            return 0
         dst_pom = POM("pom.xml")
         tmpfile = f".pom.xml.{uuid.uuid4()}"
         log.info("Creating runtime pom.xml in %r", (tmpfile,))
