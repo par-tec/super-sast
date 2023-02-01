@@ -1,3 +1,4 @@
 # Run pytest in parallel with 4 processes
-pytest==6.2.5
+pytest==7.2.1
 pytest-parallel==0.1.1
+py>=1.11.0
