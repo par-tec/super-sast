@@ -19,14 +19,19 @@ services:
     - RUN_LOCAL=true
   test-latest: &test-latest
     image: ghcr.io/par-tec/super-sast:latest
-    read_only: false  # Super-sast downloads updated rules in /tmp/.
+    read_only: true
+    user: "${UID}"
     security_opt:
       - "no-new-privileges:true"
     volumes:
     - .:/code
+    - /tmp
     environment:
-    - M2_HOME=/code  # Store maven packages in the shared folder.
+    - M2_HOME=/tmp  # Store maven packages in the shared folder.
+    - HOME=/tmp
     - USER=nobody
+    - MAVEN_OPTS=" --no-transfer-progress "
+    - BANDIT_CONFIG_FILE=.bandit.yml
     working_dir: /code
   test:
     <<: *test-latest
