@@ -365,3 +365,4 @@ if __name__ == "__main__":
             f" - UID: {os.getuid()}\n - GID: {os.getgid()}\n"
             f" - Error: {type(e).__name__} -> {e}"
         )
+        raise e
