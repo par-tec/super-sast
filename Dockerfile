@@ -4,7 +4,7 @@
 #
 # Dependencies
 FROM openpolicyagent/conftest:v0.36.0 as conftest
-FROM aquasec/trivy:0.35.0 as trivy
+FROM aquasec/trivy:0.38.1 as trivy
 
 # Java builder is based on eclipse-temurin-11
 #   which is the only maintained multi-platform maven
