@@ -99,7 +99,7 @@ class POM:
 
         def _find_or_none(field, ns):
             tag = plugin.find(POM._to_ns(field, ns))
-            if tag:
+            if tag is not None and tag.text:
                 return tag.text
             return None
 
@@ -147,19 +147,18 @@ class POM:
             plugins_tag = ElementTree.SubElement(build, self.TAG_PLUGINS)
 
         dst_plugins = {(g, a): v for g, a, v in map(POM.plugin_id, self.plugins())}
-        for plugins in plugins:
+        for plugin in plugins:
             # Apply the destination pom namespace to the plugin.
-            POM.replace_ns(plugins, self.ns)
-
-            *target_plugin, target_version = POM.plugin_id(plugins)
+            *target_plugin, target_version = POM.plugin_id(plugin)
+            POM.replace_ns(plugin, self.ns)
             # Ensure that the plugin doesn't already exist.
             existing_version = dst_plugins.get(tuple(target_plugin))
             if not existing_version:
-                log.info(f"Adding plugin {POM.plugin_id(plugins)}")
-                plugins_tag.append(plugins)
+                log.info(f"Adding plugin {POM.plugin_id(plugin)}")
+                plugins_tag.append(plugin)
                 continue
             if existing_version == target_version:
-                log.info(f"Plugin {POM.plugin_id(plugins)} already exists. Skipping.")
+                log.info(f"Plugin {POM.plugin_id(plugin)} already exists. Skipping.")
                 continue
             if existing_version != target_version:
                 raise ValueError(
