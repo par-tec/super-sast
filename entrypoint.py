@@ -225,10 +225,16 @@ def run_sast(tool, command, env, config_dir, log_file=stdout, run_all=True):
     cmdline = command["cmdline"]
     config_file = env_config_file or default_config_file
     cmd_args = env_args or default_args
+    maven_args = env.get("MAVEN_ARGS", "")
+    if (
+        env.get("LOG_MAVEN_PROGRESS", "false") == "false"
+        and "--no-transfer-progress" not in maven_args
+    ):
+        maven_args += " --no-transfer-progress "
     cmd = cmdline.format(
         args=cmd_args,
         config_file=config_file,
-        maven_args=env.get("MAVEN_ARGS", ""),
+        maven_args=maven_args,
     )
 
     if cmd.startswith("mvn "):
@@ -266,6 +272,7 @@ def _show_environ(config_dir, dump_config=False):
     print("""|Variable|Default|Tool|""")
     print("""|--------|-------|----|""")
     print("""|RUN_ALL_TOOLS|true|Run all tools|""")
+    print("""|LOG_MAVEN_PROGRESS|false|Log maven progress|""")
     for tool, command in TOOLS_MAP.items():
         var_enabled = f"RUN_{tool.upper()}"
         var_args = f"{tool.upper()}_ARGS"
