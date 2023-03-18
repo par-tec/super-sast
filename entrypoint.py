@@ -205,9 +205,7 @@ def _localize(path, config_dir):
     return (config_dir / path).absolute().as_posix()
 
 
-def run_sast(
-    tool, command, env, config_dir, log_file=stdout, run_all=True, maven_logs=False
-):
+def run_sast(tool, command, env, config_dir, log_file=stdout, run_all=True):
     log.info(f"Preparing {tool}")
 
     var_enabled = f"RUN_{tool.upper()}"
@@ -228,7 +226,10 @@ def run_sast(
     config_file = env_config_file or default_config_file
     cmd_args = env_args or default_args
     maven_args = env.get("MAVEN_ARGS", "")
-    if not maven_logs and "--no-transfer-progress" not in maven_args:
+    if (
+        env.get("LOG_MAVEN_PROGRESS", "false") == "false"
+        and "--no-transfer-progress" not in maven_args
+    ):
         maven_args += " --no-transfer-progress "
     cmd = cmdline.format(
         args=cmd_args,
@@ -271,6 +272,7 @@ def _show_environ(config_dir, dump_config=False):
     print("""|Variable|Default|Tool|""")
     print("""|--------|-------|----|""")
     print("""|RUN_ALL_TOOLS|true|Run all tools|""")
+    print("""|LOG_MAVEN_PROGRESS|false|Log maven progress|""")
     for tool, command in TOOLS_MAP.items():
         var_enabled = f"RUN_{tool.upper()}"
         var_args = f"{tool.upper()}_ARGS"
@@ -341,12 +343,6 @@ if __name__ == "__main__":
         default="",
         action="store_true",
     )
-    parser.add_argument(
-        "--log-maven-progress",
-        help="Write maven progress to the log file",
-        default=False,
-        action="store_true",
-    )
     args = parser.parse_args()
     try:
         if args.environs or args.dump_config:
@@ -370,7 +366,6 @@ if __name__ == "__main__":
                 config_dir=Path(args.config_dir),
                 log_file=stdout,
                 run_all=run_all,
-                maven_logs=args.log_maven_progress,
             )
             sast_status[tool] = status
         log.info("All tools finished")
