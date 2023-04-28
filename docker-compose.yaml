@@ -30,7 +30,6 @@ services:
     - M2_HOME=/tmp  # Store maven packages in the shared folder.
     - HOME=/tmp
     - USER=nobody
-    - MAVEN_OPTS=" --no-transfer-progress "
     - BANDIT_CONFIG_FILE=.bandit.yml
     working_dir: /code
   test:
@@ -41,7 +40,6 @@ services:
       - M2_HOME=/code
       - HOME=/tmp
       - USER=nobody
-      - MAVEN_OPTS=" -ntp "
       - RUN_OWASP_DEPENDENCY_CHECK=false
       - RUN_SPOTBUGS_CHECK=false
       - RUN_SPOTLESS_CHECK=false
