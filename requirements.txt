@@ -1,5 +1,5 @@
 # Testing and SAST tools.
-bandit==1.7.4
+bandit==1.7.5
 checkov==2.2.327
 pytest==7.2.1
 pre-commit==3.0.2
