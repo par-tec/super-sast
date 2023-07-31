@@ -37,6 +37,7 @@ services:
     build: .
     user: "${UID}"
     environment:
+      - VIRTUALENV_SYSTEM_SITE_PACKAGES=true
       - M2_HOME=/code
       - HOME=/tmp
       - USER=nobody
