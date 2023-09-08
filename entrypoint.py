@@ -209,12 +209,9 @@ def exists_python_code(dir):
 
     py_files = ["setup.py", "tox.ini", "pyproject.toml", "requirements.txt", "requirements-dev.txt"]
 
-    for file in os.listdir(dir):
-        for py in py_files:
-            if file == py:
-                return True
-
-        if file.endswith(".py"):
+    for py_file in py_files:
+        py_path = pathlib.Path(dir).joinpath(py_file)
+        if py_path.exists():
             return True
 
     return False
@@ -238,9 +235,9 @@ def run_sast(tool, command, env, config_dir, log_file=stdout, run_all=True):
         return
 
     if tool.lower() == "safety" :
-        if (not exists_python_code(os.getenv('PWD'))):
+        if (not exists_python_code(os.getcwd())):
             log.info("Skipping safety because there are no python project descriptors")
-            return 0
+            return
 
     cmdline = command["cmdline"]
     config_file = env_config_file or default_config_file
