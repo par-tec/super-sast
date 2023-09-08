@@ -205,6 +205,21 @@ def _localize(path, config_dir):
     return (config_dir / path).absolute().as_posix()
 
 
+def exists_python_code(dir):
+
+    py_files = ["setup.py", "tox.ini", "pyproject.toml", "requirements.txt", "requirements-dev.txt"]
+
+    for file in os.listdir(dir):
+        for py in py_files:
+            if file == py:
+                return True
+
+        if file.endswith(".py"):
+            return True
+
+    return False
+
+
 def run_sast(tool, command, env, config_dir, log_file=stdout, run_all=True):
     log.info(f"Preparing {tool}")
 
@@ -221,6 +236,11 @@ def run_sast(tool, command, env, config_dir, log_file=stdout, run_all=True):
     if env_enabled.lower() != "true":
         log.info(f"Skipping {tool}")
         return
+
+    if tool.lower() == "safety" :
+        if (not exists_python_code(os.getenv('PWD'))):
+            log.info("Skipping safety because there are no python project descriptors")
+            return 0
 
     cmdline = command["cmdline"]
     config_file = env_config_file or default_config_file
