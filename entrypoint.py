@@ -206,11 +206,16 @@ def _localize(path, config_dir):
 
 
 def exists_python_code(dir):
-
-    py_files = ["setup.py", "tox.ini", "pyproject.toml", "requirements.txt", "requirements-dev.txt"]
+    py_files = [
+        "setup.py",
+        "tox.ini",
+        "pyproject.toml",
+        "requirements.txt",
+        "requirements-dev.txt",
+    ]
 
     for py_file in py_files:
-        py_path = pathlib.Path(dir).joinpath(py_file)
+        py_path = Path(dir).joinpath(py_file)
         if py_path.exists():
             return True
 
@@ -234,8 +239,8 @@ def run_sast(tool, command, env, config_dir, log_file=stdout, run_all=True):
         log.info(f"Skipping {tool}")
         return
 
-    if tool.lower() == "safety" :
-        if (not exists_python_code(os.getcwd())):
+    if tool.lower() == "safety":
+        if not exists_python_code(os.getcwd()):
             log.info("Skipping safety because there are no python project descriptors")
             return
 
