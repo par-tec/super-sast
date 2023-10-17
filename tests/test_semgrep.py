@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import os
 from pathlib import Path
 
 import pytest
@@ -11,10 +10,10 @@ DATA_DIR = Path(__file__).parent / "data"
 SEMGREP_DIR = DATA_DIR / "semgrep-01"
 
 
-def test_semgrep_ignore(log_file):
+def test_semgrep_ignore(log_file, monkeypatch):
     expected_pylist = [SEMGREP_DIR / "init.py", SEMGREP_DIR / "simple.py"]
 
-    os.chdir(SEMGREP_DIR.as_posix())
+    monkeypatch.chdir(SEMGREP_DIR.as_posix())
 
     with log_file.open("a") as log_fh:
         # Run Semgrep tool
