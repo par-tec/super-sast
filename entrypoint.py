@@ -21,6 +21,8 @@ from shutil import copytree
 from sys import stderr, stdout
 from xml.etree import ElementTree
 
+from packaging.version import parse as parse_version
+
 # Log to stdout
 # for both stdout and stderr.
 logging.basicConfig(
@@ -160,7 +162,12 @@ class POM:
             if existing_version == target_version:
                 log.info(f"Plugin {POM.plugin_id(plugin)} already exists. Skipping.")
                 continue
-            if existing_version != target_version:
+            existing_v = parse_version(existing_version)
+            target_v = parse_version(target_version)
+            if existing_v < target_v:
+                log.info(f"Plugin {POM.plugin_id(plugin)} already exists. Skipping.")
+                continue
+            if existing_v > target_v:
                 raise ValueError(
                     f"Plugin {target_plugin} already exists with version {existing_version}"
                 )
