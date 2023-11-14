@@ -35,11 +35,11 @@ log = logging.getLogger(__name__)
 
 TOOLS_MAP = {
     "trivy_config": {
-        "cmdline": "trivy --config {config_file} config .",
+        "cmdline": "trivy --config {config_file} {args} config .",
         "config_file": "trivy.yaml",
     },
     "trivy_filesystem": {
-        "cmdline": "trivy --config {config_file} filesystem .",
+        "cmdline": "trivy --config {config_file} {args} filesystem .",
         "config_file": "trivy.yaml",
     },
     "bandit": {
