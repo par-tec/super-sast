@@ -11,7 +11,7 @@
       <plugin>
         <groupId>com.github.spotbugs</groupId>
         <artifactId>spotbugs-maven-plugin</artifactId>
-        <version>4.7.1</version>
+        <version>4.8.1</version>
         <configuration>
           <effort>Max</effort>
           <threshold>Low</threshold>
@@ -36,7 +36,7 @@
       <plugin>
         <groupId>org.owasp</groupId>
         <artifactId>dependency-check-maven</artifactId>
-        <version>7.2.1</version>
+        <version>8.2.1</version>
         <configuration>
           <cveStartYear>2018</cveStartYear>
         </configuration>

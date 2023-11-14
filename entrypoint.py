@@ -136,9 +136,10 @@ class POM:
     def plugins_tag(self):
         return self.findall(".//build/plugins")[0]
 
-    def add_plugins(self, plugins):
+    def add_plugins(self, plugins) -> list:
         if not plugins:
             return
+        errors = []
         build = self.find("build")
         # Add build tag if it doesn't exist.
         if not build:
@@ -159,18 +160,28 @@ class POM:
                 log.info(f"Adding plugin {POM.plugin_id(plugin)}")
                 plugins_tag.append(plugin)
                 continue
-            if existing_version == target_version:
-                log.info(f"Plugin {POM.plugin_id(plugin)} already exists. Skipping.")
-                continue
-            existing_v = parse_version(existing_version)
-            target_v = parse_version(target_version)
-            if existing_v < target_v:
-                log.info(f"Plugin {POM.plugin_id(plugin)} already exists. Skipping.")
-                continue
-            if existing_v > target_v:
-                raise ValueError(
-                    f"Plugin {target_plugin} already exists with version {existing_version}"
+
+            target_version = parse_version(target_version)
+            existing_version = parse_version(existing_version)
+
+            if target_version < existing_version:
+                log.info(
+                    f"Plugin {POM.plugin_id(plugin)} already exists with a newer version {existing_version}. Skipping."
                 )
+                continue
+            if target_version == existing_version:
+                log.info(
+                    f"Plugin {POM.plugin_id(plugin)}@{target_version} already present. Skipping."
+                )
+                continue
+            if target_version > existing_version:
+                # At the moment, we don't do this, since upgrading plugins can break builds.
+                errors.append(
+                    ValueError(
+                        f"Plugin {target_plugin} already exists with an older version {existing_version}. Cannot add {target_version}."
+                    )
+                )
+        return errors
 
     def validate_plugins(self, plugins):
         dst_plugins = {(g, a): v for g, a, v in map(POM.plugin_id, self.plugins())}
@@ -194,10 +205,10 @@ class POM:
         for child in element:
             POM.replace_ns(child, new_ns)
 
-    def add_plugins_from_pom(self, src_pom_xml: str):
+    def add_plugins_from_pom(self, src_pom_xml: str) -> list:
         src_pom = POM(src_pom_xml)
         src_plugins = src_pom.plugins()
-        self.add_plugins(src_plugins)
+        return self.add_plugins(src_plugins)
 
     def write(self, fpath: str):
         ElementTree.register_namespace("", self.ns)
@@ -231,6 +242,7 @@ def exists_python_code(dir):
 
 def run_sast(tool, command, env, config_dir, log_file=stdout, run_all=True):
     log.info(f"Preparing {tool}")
+    errors = None
 
     var_enabled = f"RUN_{tool.upper()}"
     var_args = f"{tool.upper()}_ARGS"
@@ -265,7 +277,6 @@ def run_sast(tool, command, env, config_dir, log_file=stdout, run_all=True):
         config_file=config_file,
         maven_args=maven_args,
     )
-
     if cmd.startswith("mvn "):
         if " -f " in cmd:
             log.error(f"Skipping {tool} because it uses a custom pom.xml: {cmd}")
@@ -276,7 +287,10 @@ def run_sast(tool, command, env, config_dir, log_file=stdout, run_all=True):
         dst_pom = POM("pom.xml")
         tmpfile = f".pom.xml.{uuid.uuid4()}"
         log.info("Creating runtime pom.xml in %r", (tmpfile,))
-        dst_pom.add_plugins_from_pom("/app/java-validators/pom.xml")
+
+        # Track plugins that have not been added.
+        #   They will be listed at the end of the run, which will fail.
+        errors = dst_pom.add_plugins_from_pom("/app/java-validators/pom.xml")
         dst_pom.write(tmpfile)
         cmd = f"mvn -f {tmpfile} {cmd[3:]}"
 
@@ -292,7 +306,9 @@ def run_sast(tool, command, env, config_dir, log_file=stdout, run_all=True):
     )
     if status.returncode != 0:
         log.error(f"{tool} failed with status {status.returncode}")
-    return status.returncode
+    if errors:
+        log.error(f"{tool} setup failed with errors {errors}")
+    return status.returncode or bool(errors)
 
 
 def _show_environ(config_dir, dump_config=False):

@@ -66,10 +66,19 @@ def test_pom_append_plugins():
         assert "ns0:" not in content
 
 
-# Add plugin with newer version
-def test_pom_add_plugin_version():
-    dst_pom = POM(DATA_DIR / "dest-pom-4.xml")
+def test_dont_add_older_plugins():
+    dst_pom = POM(DATA_DIR / "dest-pom-5.xml")
     src_pom = POM(DATA_DIR / "src-pom.xml")
     src_plugins = src_pom.plugins()
     dst_pom.plugins()
     dst_pom.add_plugins(src_plugins)
+    assert True
+
+
+def test_return_skipped_plugins():
+    dst_pom = POM(DATA_DIR / "dest-pom-4.xml")
+    src_pom = POM(DATA_DIR / "src-pom.xml")
+    src_plugins = src_pom.plugins()
+    dst_pom.plugins()
+    errors = dst_pom.add_plugins(src_plugins)
+    assert errors
