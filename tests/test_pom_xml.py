@@ -68,11 +68,8 @@ def test_pom_append_plugins():
 
 # Add plugin with newer version
 def test_pom_add_plugin_version():
-    # src_pom == super-sast
-    # dst_pom == POM on directory
     dst_pom = POM(DATA_DIR / "dest-pom-4.xml")
     src_pom = POM(DATA_DIR / "src-pom.xml")
     src_plugins = src_pom.plugins()
     dst_pom.plugins()
     dst_pom.add_plugins(src_plugins)
-    # no errors
