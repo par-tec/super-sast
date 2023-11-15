@@ -39,7 +39,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
             <plugin>
                 <groupId>org.owasp</groupId>
                 <artifactId>dependency-check-maven</artifactId>
-                <version>8.0.0</version>
+                <version>8.4.0</version>
                 <configuration>
                     <cveStartYear>2018</cveStartYear>
                 </configuration>
