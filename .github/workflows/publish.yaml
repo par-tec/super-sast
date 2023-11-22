@@ -53,7 +53,7 @@ jobs:
         uses: instrumenta/conftest-action@master
         with:
           files: Dockerfile
-          policy: .dockerfile-security.rego
+          policy: .docker-security.rego
   publish:
     runs-on: ubuntu-latest
     if: github.event_name != 'pull_request'
