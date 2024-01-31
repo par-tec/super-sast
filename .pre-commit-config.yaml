@@ -86,10 +86,10 @@ repos:
     always_run: true
     verbose: true
     stages: [manual]
-  - id: dockerfile-security
-    name: dockerfile-security
+  - id: docker-security
+    name: docker-security
     entry: >-
-      conftest test -p .dockerfile-security.rego
+      conftest test -p .docker-security.rego
     language: system
     verbose: true
     stages: []
